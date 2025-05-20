@@ -8,7 +8,7 @@
             </div>
 
             <div class="hidden md:flex items-center space-x-2">
-                <a href=""
+                <a href="/"
                     class="text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60] px-4 py-3 rounded-xl transition-all font-poppins font-semibold text-[15px] uppercase">Beranda</a>
                 <a href=""
                     class="text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60] px-4 py-3 rounded-xl transition-all font-poppins font-semibold text-[15px] uppercase">Layanan</a>
@@ -35,10 +35,12 @@
                         </button>
                         <div id="userMenu"
                             class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg py-1 z-10">
-                            <a href=""
+                            <a href="{{ route('profile') }}"
                                 class="block px-4 py-2 text-sm text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60]/10 rounded-lg mx-1 my-1 font-poppins">Profil</a>
-                            <a href=""
+
+                            <a href="{{ Auth::user()->role_id == 1 ? route('admin.dashboard') : route('tukang.dashboard') }}"
                                 class="block px-4 py-2 text-sm text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60]/10 rounded-lg mx-1 my-1 font-poppins">Dashboard</a>
+
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit"
@@ -108,13 +110,13 @@
             <div class="border-t border-gray-200 my-3"></div>
             @auth
                 <li>
-                    <a href=""
+                    <a href="{{ route('profile') }}"
                         class="block text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60] px-4 py-3 rounded-xl transition-all font-poppins font-semibold text-[15px] uppercase">
                         Profil
                     </a>
                 </li>
                 <li>
-                    <a href=""
+                    <a href="{{ Auth::user()->role_id == 1 ? route('admin.dashboard') : route('tukang.dashboard') }}"
                         class="block text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60] px-4 py-3 rounded-xl transition-all font-poppins font-semibold text-[15px] uppercase">
                         Dashboard
                     </a>

@@ -45,9 +45,9 @@ class LoginController extends Controller
             $welcomeMessage = 'Selamat datang kembali, ' . $user->name . '!';
 
             if ($user->role_id == 1) { // Admin
-                return redirect()->intended('/admin/dashboard')->with('success', $welcomeMessage);
+                return redirect()->intended('/dashboard-admin')->with('success', $welcomeMessage);
             } elseif ($user->role_id == 2) { // Tukang
-                return redirect()->intended('/tukang/dashboard')->with('success', $welcomeMessage);
+                return redirect()->intended('/dashboard-tukang')->with('success', $welcomeMessage);
             } else { // Customer
                 return redirect()->intended('/')->with('success', $welcomeMessage);
             }
