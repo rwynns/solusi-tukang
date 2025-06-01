@@ -16,7 +16,8 @@ return new class extends Migration
             $table->foreignId('jasa_id')->constrained('jasa')->onDelete('cascade');
             $table->string('nama');
             $table->text('deskripsi')->nullable();
-            $table->decimal('harga', 10, 2);
+            $table->unsignedBigInteger('harga');
+            $table->string('satuan')->nullable();
             $table->string('gambar')->nullable();
             $table->timestamps();
         });

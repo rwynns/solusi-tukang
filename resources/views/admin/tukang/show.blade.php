@@ -84,7 +84,7 @@
                                 <div class="flex flex-wrap gap-2">
                                     @forelse ($tukang->tukangProfile->skills as $skill)
                                         <span class="px-2 py-1 text-sm rounded-full bg-[#332E60] text-white">
-                                            {{ $skill->name }}
+                                            {{ $skill->nama }}
                                         </span>
                                     @empty
                                         <span class="text-sm text-gray-500">Belum ada keahlian</span>

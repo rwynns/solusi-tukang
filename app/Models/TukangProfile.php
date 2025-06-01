@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TukangProfile extends Model
 {
@@ -82,5 +83,45 @@ class TukangProfile extends Model
     public function getAddressAttribute()
     {
         return $this->user->address;
+    }
+
+    /**
+     * Get the orders for the tukang.
+     */
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    /**
+     * Get the payment option associated with the order.
+     */
+    public function paymentOption(): BelongsTo
+    {
+        return $this->belongsTo(PaymentOption::class);
+    }
+
+    /**
+     * Get the order items for the order.
+     */
+    public function items(): HasMany
+    {
+        return $this->hasMany(OrderItem::class);
+    }
+
+    /**
+     * Get the order associated with the order item.
+     */
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Order::class);
+    }
+
+    /**
+     * Get the tukang profile associated with the order item.
+     */
+    public function tukangProfile(): BelongsTo
+    {
+        return $this->belongsTo(TukangProfile::class);
     }
 }

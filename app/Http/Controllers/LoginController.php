@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Cookie;
 
 class LoginController extends Controller
 {
@@ -71,5 +72,42 @@ class LoginController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
+    }
+
+    /**
+     * Setelah login berhasil
+     * 
+     * @param  \Illuminate\Http\Request  $request
+     * @param  mixed  $user
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    protected function authenticated(Request $request, $user)
+    {
+        // Jika ada cart di session, pindahkan ke cookie
+        if (session()->has('cart')) {
+            $cart = session('cart');
+            Cookie::queue('cart', json_encode($cart), 60 * 24 * 7);
+            session()->forget('cart');
+        }
+
+        return redirect()->intended($this->redirectPath());
+    }
+
+    /**
+     * Get the post login redirect path.
+     *
+     * @return string
+     */
+    protected function redirectPath()
+    {
+        $user = Auth::user();
+
+        if ($user->role_id == 1) { // Admin
+            return '/dashboard-admin';
+        } elseif ($user->role_id == 2) { // Tukang
+            return '/dashboard-tukang';
+        } else { // Customer
+            return '/';
+        }
     }
 }
