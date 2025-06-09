@@ -20,19 +20,26 @@ class CheckoutController extends Controller
      */
     public function index(Request $request)
     {
-        $cart = json_decode($request->cookie('cart'), true) ?? [];
+        // Get cart data directly
+        $cartController = new \App\Http\Controllers\CartController();
+        $cartData = $cartController->index($request);
 
-        if (empty($cart)) {
-            // Coba ambil dari session sebagai fallback
-            $cart = session('cart', []);
-
-            if (empty($cart)) {
-                return redirect()->route('cart.index')->with('error', 'Keranjang belanja Anda kosong');
-            }
-
-            // Simpan ke cookie untuk konsistensi
-            Cookie::queue('cart', json_encode($cart), 60 * 24 * 7);
+        // If cart is empty, redirect
+        if (!$cartData || empty($cartData)) {
+            return redirect()->route('cart.index')->with('error', 'Keranjang belanja Anda kosong');
         }
+
+        // Transform for view compatibility
+        $cart = collect($cartData)->map(function ($item) {
+            return [
+                'id' => $item['sub_jasa_id'] ?? $item['id'],
+                'name' => $item['name'],
+                'price' => $item['price'],
+                'image' => $item['image'],
+                'quantity' => $item['quantity'],
+                'satuan' => $item['satuan'] ?? null
+            ];
+        })->toArray();
 
         return view('checkout.review', [
             'cart' => $cart,
@@ -45,11 +52,25 @@ class CheckoutController extends Controller
      */
     public function selectTechnicians(Request $request)
     {
-        $cart = json_decode($request->cookie('cart'), true) ?? [];
+        // Get cart data directly
+        $cartController = new \App\Http\Controllers\CartController();
+        $cartData = $cartController->index($request);
 
-        if (empty($cart)) {
+        if (!$cartData || empty($cartData)) {
             return redirect()->route('cart.index')->with('error', 'Keranjang belanja Anda kosong');
         }
+
+        // Transform for view compatibility
+        $cart = collect($cartData)->map(function ($item) {
+            return [
+                'id' => $item['sub_jasa_id'] ?? $item['id'],
+                'name' => $item['name'],
+                'price' => $item['price'],
+                'image' => $item['image'],
+                'quantity' => $item['quantity'],
+                'satuan' => $item['satuan'] ?? null
+            ];
+        })->toArray();
 
         // Get available technicians for each service
         $availableTechnicians = [];
@@ -153,8 +174,16 @@ class CheckoutController extends Controller
             'payment_notes' => 'nullable|string|max:500' // Validasi catatan pembayaran
         ]);
 
-        $cart = json_decode($request->cookie('cart'), true) ?? [];
-        $deliveryInfo = session('checkout.delivery');
+        // Get cart data using CartController for consistency
+        // Get cart data using CartController for consistency
+        $cartController = new \App\Http\Controllers\CartController();
+        $cartData = $cartController->index($request);
+
+        if (!$cartData || empty($cartData)) {
+            return redirect()->route('cart.index')->with('error', 'Keranjang belanja Anda kosong');
+        }
+
+        $cart = $cartData;
         $selectedTechnicians = session('selected_technicians');
 
         if (empty($cart) || empty($deliveryInfo) || empty($selectedTechnicians)) {
@@ -187,7 +216,7 @@ class CheckoutController extends Controller
 
                 OrderItem::create([
                     'order_id' => $order->id,
-                    'sub_jasa_id' => $item['id'],
+                    'sub_jasa_id' => $item['sub_jasa_id'],
                     'tukang_profile_id' => $tukangProfileId,
                     'name' => $item['name'],
                     'quantity' => $item['quantity'],
@@ -217,7 +246,13 @@ class CheckoutController extends Controller
 
             DB::commit();
 
-            // Clear cart and session data
+            // Clear cart for both authenticated and guest users
+            if (Auth::check()) {
+                // Clear database cart for authenticated users
+                \App\Models\Cart::forUser(Auth::id())->delete();
+            }
+
+            // Clear cookie/localStorage cart
             Cookie::queue(Cookie::forget('cart'));
             session()->forget(['checkout.delivery', 'selected_technicians']);
 

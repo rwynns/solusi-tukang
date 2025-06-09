@@ -27,11 +27,32 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/jasa/{jasa}', [HomeController::class, 'jasaDetail'])->name('jasa.detail');
 Route::get('/api/sub-jasa/{subJasa}', [HomeController::class, 'getSubJasaDetail']);
 
+// Test route for cart functionality
+Route::get('/test-cart', function () {
+    return view('test-cart');
+})->name('test.cart');
+
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register']);
+
+// Temporary debug route
+Route::get('/debug/cart', function () {
+    if (!Auth::check()) {
+        return response()->json(['error' => 'Not authenticated']);
+    }
+
+    $userId = Auth::id();
+    $cartItems = \App\Models\Cart::where('user_id', $userId)->with('subJasa')->get();
+
+    return response()->json([
+        'user_id' => $userId,
+        'cart_items_count' => $cartItems->count(),
+        'cart_items' => $cartItems->toArray()
+    ]);
+})->middleware('auth');
 
 // Cart routes (with auth middleware)
 Route::middleware(['auth'])->group(function () {
@@ -40,6 +61,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/cart/update', [CartController::class, 'updateItem'])->name('cart.update');
     Route::post('/cart/remove', [CartController::class, 'removeItem'])->name('cart.remove');
     Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
+    Route::get('/cart/data', [CartController::class, 'getData'])->name('cart.data');
+    Route::get('/cart/count', [CartController::class, 'getCount'])->name('cart.count');
+    Route::post('/cart/migrate', [CartController::class, 'migrateGuestCart'])->name('cart.migrate');
     Route::get('/cart/get', [CartController::class, 'getCart'])->name('cart.get');
     Route::post('/cart/sync', [CartController::class, 'syncCart'])->name('cart.sync');
 

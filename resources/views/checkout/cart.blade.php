@@ -23,28 +23,8 @@
 @section('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Ambil data cart dari server terlebih dahulu
-            fetch('{{ route('cart.get') }}')
-                .then(response => response.json())
-                .then(data => {
-                    const serverCart = data.cart || [];
-                    const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
-
-                    // Jika server cart kosong tapi local cart ada isinya, sync ke server
-                    if (serverCart.length === 0 && localCart.length > 0) {
-                        syncCartWithServer(localCart);
-                    }
-                    // Jika server cart ada isinya tapi berbeda dengan local cart, gunakan server cart
-                    else if (serverCart.length > 0) {
-                        localStorage.setItem('cart', JSON.stringify(serverCart));
-                    }
-
-                    renderCart();
-                })
-                .catch(error => {
-                    console.error('Error fetching cart data:', error);
-                    renderCart(); // Render dari localStorage sebagai fallback
-                });
+            // Load cart data and render
+            renderCart();
 
             // Listen for cart updates
             document.addEventListener('cartUpdated', function() {
@@ -52,9 +32,30 @@
             });
         });
 
-        function renderCart() {
-            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        async function renderCart() {
             const cartContent = document.getElementById('cartContent');
+
+            if (!cartContent) return;
+
+            // Get cart data from CartManager
+            let cartData;
+            if (window.cartManager) {
+                cartData = await window.cartManager.getCartData();
+            } else {
+                // Fallback to localStorage for guests
+                const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+                const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+                cartData = {
+                    success: true,
+                    items: cart,
+                    count: count,
+                    total: total,
+                    formatted_total: `Rp ${total.toLocaleString('id-ID')}`
+                };
+            }
+
+            const cart = cartData.items || [];
 
             if (cart.length === 0) {
                 // Empty cart view
@@ -147,86 +148,63 @@
 
             cartContent.innerHTML = cartHtml;
         }
-
-        function incrementQuantity(index) {
-            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-            if (cart[index]) {
-                cart[index].quantity += 1;
-                updateCart(cart, index);
+        async function incrementQuantity(index) {
+            if (window.cartManager) {
+                const cartData = await window.cartManager.getCartData();
+                const item = cartData.items[index];
+                if (item) {
+                    await window.cartManager.updateQuantity(item.sub_jasa_id, item.quantity + 1, index);
+                }
+            } else {
+                // Fallback for guests
+                const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                if (cart[index]) {
+                    cart[index].quantity += 1;
+                    localStorage.setItem('cart', JSON.stringify(cart));
+                    renderCart();
+                    updateCartUI();
+                }
             }
         }
 
-        function decrementQuantity(index) {
-            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-            if (cart[index] && cart[index].quantity > 1) {
-                cart[index].quantity -= 1;
-                updateCart(cart, index);
+        async function decrementQuantity(index) {
+            if (window.cartManager) {
+                const cartData = await window.cartManager.getCartData();
+                const item = cartData.items[index];
+                if (item && item.quantity > 1) {
+                    await window.cartManager.updateQuantity(item.sub_jasa_id, item.quantity - 1, index);
+                }
+            } else {
+                // Fallback for guests
+                const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                if (cart[index] && cart[index].quantity > 1) {
+                    cart[index].quantity -= 1;
+                    localStorage.setItem('cart', JSON.stringify(cart));
+                    renderCart();
+                    updateCartUI();
+                }
             }
         }
 
-        function removeFromCart(index) {
-            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-            if (cart[index]) {
-                // Use AJAX to update server-side cart
-                fetch('{{ route('cart.remove') }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: JSON.stringify({
-                            index: index
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Update local cart
-                            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-                            cart.splice(index, 1);
-                            localStorage.setItem('cart', JSON.stringify(cart));
-
-                            // Update UI
-                            renderCart();
-                            updateCartUI();
-
-                            // Show notification
-                            showNotification('Item berhasil dihapus dari keranjang');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error removing item from cart:', error);
-                    });
+        async function removeFromCart(index) {
+            if (window.cartManager) {
+                const cartData = await window.cartManager.getCartData();
+                const item = cartData.items[index];
+                if (item) {
+                    await window.cartManager.removeFromCart(item.sub_jasa_id, index);
+                    showNotification('Item berhasil dihapus dari keranjang');
+                }
+            } else {
+                // Fallback for guests
+                const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                if (cart[index]) {
+                    cart.splice(index, 1);
+                    localStorage.setItem('cart', JSON.stringify(cart));
+                    renderCart();
+                    updateCartUI();
+                    showNotification('Item berhasil dihapus dari keranjang');
+                }
             }
-        }
-
-        function updateCart(cart, index) {
-            // Use AJAX to update server-side cart
-            fetch('{{ route('cart.update') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        index: index,
-                        quantity: cart[index].quantity
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Update local cart
-                        localStorage.setItem('cart', JSON.stringify(cart));
-
-                        // Update UI
-                        renderCart();
-                        updateCartUI();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error updating cart:', error);
-                });
         }
 
         function showNotification(message) {

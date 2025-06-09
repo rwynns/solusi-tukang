@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Solusi Tukang' }}</title>
     @vite('resources/css/app.css')
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,8 +15,18 @@
         href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
         rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{{ asset('js/cart-manager.js') }}"></script>
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/trix@2.0.0/dist/trix.css">
     <script type="text/javascript" src="https://unpkg.com/trix@2.0.0/dist/trix.umd.min.js"></script>
+    <script>
+        // Global authentication state for cart manager
+        window.isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
+
+        // Initialize CartManager when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            window.cartManager = new CartManager();
+        });
+    </script>
 </head>
 
 <body>
@@ -53,40 +64,32 @@
                 });
             @endif
         });
-    </script>
-
-    <!-- Cart and checkout functionality -->
+    </script> <!-- Cart and checkout functionality -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize cart
-            let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-
-            // Setup event listeners
+            // Setup event listeners for cart functionality
             const cartButton = document.getElementById('cartButton');
             const mobileCartButton = document.getElementById('mobileCartButton');
-            const proceedToCheckout = document.getElementById('proceedToCheckout');
-            const confirmOrder = document.getElementById('confirmOrder');
 
             if (cartButton) cartButton.addEventListener('click', openCartModal);
             if (mobileCartButton) mobileCartButton.addEventListener('click', openCartModal);
-            if (proceedToCheckout) proceedToCheckout.addEventListener('click', proceedToCheckout);
-            if (confirmOrder) confirmOrder.addEventListener('click', handleOrderConfirmation);
 
-            // Initialize cart count
-            updateCartCount();
+            // Listen for cart updates from CartManager
+            document.addEventListener('cartUpdated', function(e) {
+                if (e.detail && e.detail.count !== undefined) {
+                    updateCartCountDisplay(e.detail.count);
+                }
+            });
         });
 
-        function updateCartCount() {
-            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-            const count = cart.reduce((total, item) => total + item.quantity, 0);
-
-            // Get all cart count elements to ensure we update them everywhere
-            const cartCountElements = document.querySelectorAll('[id^="cartCount"]');
+        function updateCartCountDisplay(count) {
+            // Update all cart count elements
+            const cartCountElements = document.querySelectorAll('[id*="cartCount"], [class*="cart-count"]');
             cartCountElements.forEach(element => {
                 element.textContent = count;
             });
 
-            // Also update specific elements by ID for backwards compatibility
+            // Update specific elements by ID for backwards compatibility
             const desktopCount = document.getElementById('cartCount');
             const mobileCount = document.getElementById('mobileCartCount');
 
@@ -116,7 +119,7 @@
             });
         }
 
-        // Load cart items
+        // Load cart items using CartManager
         renderCartItems();
         }
 
@@ -148,9 +151,7 @@
             if (checkoutModal) checkoutModal.classList.add('hidden');
             openCartModal();
         }
-
-        function renderCartItems() {
-            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        async function renderCartItems() {
             const cartItemsContainer = document.getElementById('cartItems');
             const cartSummary = document.getElementById('cartSummary');
             const cartSubtotal = document.getElementById('cartSubtotal');
@@ -160,21 +161,26 @@
             // Clear container
             cartItemsContainer.innerHTML = '';
 
+            // Get cart data from CartManager
+            const cartData = await window.cartManager.getCartData();
+            const cart = cartData.items || [];
+
+            // Debug logging
+            console.log('Cart data:', cartData);
+            console.log('Cart items:', cart);
+
             if (cart.length === 0) {
                 // Show empty cart message
                 cartItemsContainer.innerHTML = `
                     <div class="py-8 text-center text-gray-500">
-                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
                         <p class="mt-2">Keranjang belanja Anda kosong</p>
                         <p class="mt-1 text-sm">Tambahkan layanan yang Anda butuhkan</p>
                     </div>
                 `;
-
-                // Hide summary
                 if (cartSummary) cartSummary.classList.add('hidden');
-
                 return;
             }
 
@@ -187,7 +193,7 @@
                 itemElement.className = 'py-4 flex';
                 itemElement.innerHTML = `
                     <div class="flex-shrink-0 w-24 h-24 bg-gray-100 rounded-md overflow-hidden">
-                        <img src="${item.image}" alt="${item.name}" 
+                        <img src="${item.image || '/images/login-bg.png'}" alt="${item.name}" 
                              class="w-full h-full object-cover"
                              onerror="this.onerror=null; this.src='/images/login-bg.png';">
                     </div>
@@ -196,27 +202,27 @@
                             <div class="flex justify-between text-base font-medium text-gray-900">
                                 <h3>${item.name}</h3>
                                 <div class="ml-4 text-right">
-                                    <p>Rp ${Number(item.price).toLocaleString('id-ID')}</p>
-                                    ${item.satuan ? `<p class="text-xs text-gray-500">per ${item.satuan}</p>` : ''}
+                                    <p>Rp ${Number(item.price * item.quantity).toLocaleString('id-ID')}</p>
+                                    <p class="text-xs text-gray-500">@Rp ${Number(item.price).toLocaleString('id-ID')}${item.satuan ? `/${item.satuan}` : ''}</p>
                                 </div>
                             </div>
                         </div>
                         <div class="flex-1 flex items-end justify-between text-sm">
-                            <div class="flex items-center">
-                                <button onclick="decrementItem(${index})" class="text-gray-500 hover:text-gray-700 p-1">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="flex items-center border border-gray-300 rounded">
+                                <button type="button" onclick="decrementItem(${item.sub_jasa_id || item.id}, ${index})" class="p-1 hover:bg-gray-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
                                     </svg>
                                 </button>
-                                <span class="mx-2 text-gray-500">Jumlah: ${item.quantity}</span>
-                                <button onclick="incrementItem(${index})" class="text-gray-500 hover:text-gray-700 p-1">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <span class="px-2 text-gray-900">${item.quantity}</span>
+                                <button type="button" onclick="incrementItem(${item.sub_jasa_id || item.id}, ${index})" class="p-1 hover:bg-gray-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                     </svg>
                                 </button>
                             </div>
                             <div class="flex">
-                                <button type="button" onclick="removeItem(${index})" class="font-medium text-red-600 hover:text-red-500">
+                                <button type="button" onclick="removeItem(${item.sub_jasa_id || item.id}, ${index})" class="font-medium text-red-600 hover:text-red-500">
                                     Hapus
                                 </button>
                             </div>
@@ -268,57 +274,40 @@
             // Update total
             if (checkoutTotal) checkoutTotal.textContent = `Rp ${total.toLocaleString('id-ID')}`;
         }
+        async function incrementItem(subJasaId, index) {
+            if (window.cartManager) {
+                const cartData = await window.cartManager.getCartData();
+                const cart = cartData.items || [];
 
-        function incrementItem(index) {
-            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-            if (cart[index]) {
-                cart[index].quantity += 1;
-                localStorage.setItem('cart', JSON.stringify(cart));
-                renderCartItems();
-                updateCartCount();
-                document.dispatchEvent(new CustomEvent('cartUpdated', {
-                    detail: {
-                        cart: cart
-                    }
-                }));
-            }
-        }
-
-        function decrementItem(index) {
-            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-            if (cart[index]) {
-                if (cart[index].quantity > 1) {
-                    cart[index].quantity -= 1;
-                } else {
-                    cart.splice(index, 1);
+                if (cart[index]) {
+                    const newQuantity = cart[index].quantity + 1;
+                    await window.cartManager.updateCartItem(subJasaId, newQuantity, index);
+                    renderCartItems();
                 }
-                localStorage.setItem('cart', JSON.stringify(cart));
-                renderCartItems();
-                updateCartCount();
-                document.dispatchEvent(new CustomEvent('cartUpdated', {
-                    detail: {
-                        cart: cart
-                    }
-                }));
             }
         }
 
-        function removeItem(index) {
-            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-            if (cart[index]) {
-                cart.splice(index, 1);
-                localStorage.setItem('cart', JSON.stringify(cart));
+        async function decrementItem(subJasaId, index) {
+            if (window.cartManager) {
+                const cartData = await window.cartManager.getCartData();
+                const cart = cartData.items || [];
 
-                // Force immediate UI update in all places
-                renderCartItems();
-                updateCartCount();
-
-                // Add a custom event to notify other parts of the application
-                document.dispatchEvent(new CustomEvent('cartUpdated', {
-                    detail: {
-                        cart: cart
+                if (cart[index]) {
+                    const newQuantity = cart[index].quantity - 1;
+                    if (newQuantity > 0) {
+                        await window.cartManager.updateCartItem(subJasaId, newQuantity, index);
+                    } else {
+                        await window.cartManager.removeCartItem(subJasaId, index);
                     }
-                }));
+                    renderCartItems();
+                }
+            }
+        }
+
+        async function removeItem(subJasaId, index) {
+            if (window.cartManager) {
+                await window.cartManager.removeCartItem(subJasaId, index);
+                renderCartItems();
             }
         }
 

@@ -81,7 +81,7 @@
                                 </div>
                                 <p class="text-gray-600 mb-4">{{ Str::limit($subJasa->deskripsi, 100) }}</p>
                                 <div class="flex justify-between items-center">
-                                    <a href="#" onclick="showDetail('{{ $subJasa->id }}')"
+                                    <button onclick="showDetail({{ json_encode($subJasa) }})"
                                         class="text-[#F4C542] font-semibold inline-flex items-center hover:text-[#e0b53d] transition-all">
                                         Lihat Detail
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" viewBox="0 0 20 20"
@@ -90,7 +90,7 @@
                                                 d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z"
                                                 clip-rule="evenodd" />
                                         </svg>
-                                    </a>
+                                    </button>
                                     @auth
                                         <button
                                             onclick="addToCart('{{ $subJasa->id }}', '{{ $subJasa->nama }}', '{{ $subJasa->harga }}', '{{ Storage::url($subJasa->gambar ?? '') }}', '{{ $subJasa->satuan }}')"
@@ -133,88 +133,128 @@
             </div>
         </div>
     </div>
+
+    <!-- Detail Modal -->
+    <div id="detailModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog"
+        aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Background overlay -->
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="closeModal()"></div>
+
+            <!-- This element is to trick the browser into centering the modal contents. -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <!-- Modal panel -->
+            <div
+                class="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <!-- Close button -->
+                    <div class="absolute top-0 right-0 pt-4 pr-4">
+                        <button type="button" onclick="closeModal()"
+                            class="bg-white rounded-md text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#332E60]">
+                            <span class="sr-only">Close</span>
+                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Modal content -->
+                    <div id="modalContent" class="sm:flex sm:items-start">
+                        <!-- Content will be dynamically loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')
     <script>
         const isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
+        let currentSubJasa = null;
 
-        function showDetail(id) {
+        function showDetail(subJasa) {
+            currentSubJasa = subJasa;
+
             // Show modal
             document.getElementById('detailModal').classList.remove('hidden');
 
-            // Load content (in a real implementation, this would be an AJAX call)
+            // Load content
             const modalContent = document.getElementById('modalContent');
 
-            // Find the sub jasa data
-            fetch(`/api/sub-jasa/${id}`)
-                .then(response => response.json())
-                .then(data => {
-                    let subJasa = data;
-                    modalContent.innerHTML = `
-                    <div>
-                        <h3 class="text-lg leading-6 font-medium text-gray-900 font-poppins" id="modal-title">
+            // Determine image URL
+            let imageUrl;
+            if (subJasa.gambar) {
+                imageUrl = `/storage/${subJasa.gambar}`;
+            } else {
+                imageUrl = '/images/login-bg.png';
+            }
+
+            modalContent.innerHTML = `
+                <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                    <!-- Image -->
+                    <div class="mb-6">
+                        <img src="${imageUrl}" alt="${subJasa.nama}" 
+                             class="w-full h-64 object-cover rounded-lg shadow-md">
+                    </div>
+                    
+                    <!-- Title and Price -->
+                    <div class="mb-4">
+                        <h3 class="text-2xl leading-6 font-bold text-[#332E60] font-poppins mb-2" id="modal-title">
                             ${subJasa.nama}
                         </h3>
-                        <div class="mt-2">
-                            <span class="bg-blue-50 text-blue-700 py-1 px-3 rounded-full text-sm font-medium font-mono inline-block">
-                                Rp ${new Intl.NumberFormat('id-ID').format(subJasa.harga)}${subJasa.satuan ? '/'+subJasa.satuan : ''}
+                        <div class="mb-4">
+                            <span class="bg-blue-50 text-blue-700 py-2 px-4 rounded-lg text-lg font-bold font-mono inline-block">
+                                Rp ${new Intl.NumberFormat('id-ID').format(subJasa.harga)}${subJasa.satuan ? '/' + subJasa.satuan : ''}
                             </span>
                         </div>
-                        
-                        <div class="mt-4">
-                            ${subJasa.gambar ? 
-                                `<img src="/storage/${subJasa.gambar}" alt="${subJasa.nama}" class="w-full h-48 object-cover rounded-md">` : 
-                                `<img src="https://source.unsplash.com/800x600/?construction,${encodeURIComponent(subJasa.nama)}" 
-                                                                                                                                                                                                                                                         alt="${subJasa.nama}" class="w-full h-48 object-cover rounded-md">`
-                            }
-                        </div>
-                        
-                        <div class="mt-4">
-                            <p class="text-sm text-gray-500">
-                                ${subJasa.deskripsi ? subJasa.deskripsi.replace(/\n/g, '<br>') : 'Tidak ada deskripsi'}
-                            </p>
-                        </div>
-                        
-                        <div class="mt-8 grid grid-cols-2 gap-4">
-                            <button class="inline-flex justify-center items-center px-4 py-2 bg-[#332E60] text-white rounded-md hover:bg-[#292650] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#332E60]">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                                </svg>
-                                Hubungi
-                            </button>
-                            
-                            ${isAuthenticated ? 
-                            `<button onclick="addToCartFromModal()" class="inline-flex justify-center items-center px-4 py-2 bg-[#F4C542] text-[#332E60] font-semibold rounded-md hover:bg-[#e0b53d] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F4C542]">
-                                                                                                                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                                                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                                                                                                                                                            </svg>
-                                                                                                                                                            Tambah ke Keranjang
-                                                                                                                                                        </button>` :
-                            `<a href="/login" class="inline-flex justify-center items-center px-4 py-2 bg-[#F4C542] text-[#332E60] font-semibold rounded-md hover:bg-[#e0b53d] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F4C542]">
-                                                                                                                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                                                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                                                                                                                            </svg>
-                                                                                                                                                            Login untuk Beli
-                                                                                                                                                        </a>`}
+                    </div>
+                    
+                    <!-- Description -->
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-2 font-poppins">Deskripsi</h4>
+                        <div class="text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-lg">
+                            ${subJasa.deskripsi ? subJasa.deskripsi.replace(/\n/g, '<br>') : 'Tidak ada deskripsi tersedia untuk layanan ini.'}
                         </div>
                     </div>
-                `;
-                })
-                .catch(error => {
-                    modalContent.innerHTML = `
-                    <div class="text-center py-10">
-                        <svg class="mx-auto h-12 w-12 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <p class="mt-2 text-gray-500">Gagal memuat data. Silakan coba lagi.</p>
+                    
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+                        <button onclick="closeModal()" 
+                                class="flex-1 inline-flex justify-center items-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#332E60] transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            Tutup
+                        </button>
+                        
+                        ${isAuthenticated ? 
+                            `<button onclick="addToCartFromModal()" 
+                                             class="flex-1 inline-flex justify-center items-center px-6 py-3 bg-[#332E60] text-white font-semibold rounded-lg hover:bg-[#28244D] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#332E60] transition-all">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                        Tambah ke Keranjang
+                                    </button>` :
+                            `<a href="/login" 
+                                       class="flex-1 inline-flex justify-center items-center px-6 py-3 bg-[#F4C542] text-[#332E60] font-semibold rounded-lg hover:bg-[#e0b53d] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F4C542] transition-all">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                        Login untuk Beli
+                                    </a>`
+                        }
                     </div>
-                `;
-                });
+                </div>
+            `;
         }
 
         function closeModal() {
             document.getElementById('detailModal').classList.add('hidden');
+            currentSubJasa = null;
         }
 
         // Close modal when clicking Escape
@@ -224,92 +264,21 @@
             }
         });
 
-        // Cart functionality
-        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-        let currentSubJasa = null;
-
-        // Update cart count on page load
-        updateCartCount();
-
         function addToCart(id, name, price, image, satuan) {
             if (!isAuthenticated) {
                 window.location.href = '/login';
                 return;
             }
 
-            // Get latest cart data
-            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            if (window.cartManager) {
+                // Fix image URL
+                let imageUrl = image;
+                if (!image || image === '' || image === 'null' || image.includes('null')) {
+                    imageUrl = '/images/login-bg.png';
+                }
 
-            // Check if item already exists in cart
-            const existingItemIndex = cart.findIndex(item => item.id === id);
-
-            // Fix image URL - ensure it has a valid value
-            let imageUrl = image;
-            if (!image || image === '' || image === 'null' || image.includes('null')) {
-                imageUrl = '/images/login-bg.png';
+                window.cartManager.addToCart(id, name, price, imageUrl, satuan, 1);
             }
-
-            if (existingItemIndex > -1) {
-                // Increment quantity if item exists
-                cart[existingItemIndex].quantity += 1;
-            } else {
-                // Add new item with fixed image URL and satuan
-                cart.push({
-                    id: id,
-                    name: name,
-                    price: price,
-                    image: imageUrl,
-                    quantity: 1,
-                    satuan: satuan // Store the unit information
-                });
-            }
-
-            // Save to localStorage
-            localStorage.setItem('cart', JSON.stringify(cart));
-
-            // TAMBAHKAN: Sync dengan server
-            syncCartWithServer(cart);
-
-            // Update cart count
-            updateCartUI();
-
-            // Show success notification
-            showNotification(`${name} telah ditambahkan ke keranjang`);
-        }
-
-        // Fungsi baru untuk sinkronisasi dengan server
-        function syncCartWithServer(cart) {
-            fetch('{{ route('cart.sync') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        cart: cart
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (!data.success) {
-                        console.error('Failed to sync cart with server');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error syncing cart with server:', error);
-                });
-        }
-
-        // Helper function to directly update UI without events
-        function updateCartUI() {
-            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-            const count = cart.reduce((total, item) => total + item.quantity, 0);
-
-            const cartCountEl = document.getElementById('cartCount');
-            const mobileCartCountEl = document.getElementById('mobileCartCount');
-
-            if (cartCountEl) cartCountEl.textContent = count;
-            if (mobileCartCountEl) mobileCartCountEl.textContent = count;
         }
 
         function addToCartFromModal() {
@@ -318,128 +287,26 @@
                 return;
             }
 
-            if (currentSubJasa) {
+            if (currentSubJasa && window.cartManager) {
                 // Determine proper image URL
                 let imageUrl;
-                if (currentSubJasa.gambar && currentSubJasa.gambar !== 'null') {
+                if (currentSubJasa.gambar) {
                     imageUrl = `/storage/${currentSubJasa.gambar}`;
                 } else {
                     imageUrl = '/images/login-bg.png';
                 }
 
-                addToCart(
+                window.cartManager.addToCart(
                     currentSubJasa.id,
                     currentSubJasa.nama,
                     currentSubJasa.harga,
                     imageUrl,
-                    currentSubJasa.satuan // Add satuan here
+                    currentSubJasa.satuan,
+                    1
                 );
+
                 closeModal();
             }
-        }
-
-        function updateCartCount() {
-            // Calculate total quantity
-            const count = cart.reduce((total, item) => total + item.quantity, 0);
-
-            // Update UI
-            document.getElementById('cartCount').textContent = count;
-            if (document.getElementById('mobileCartCount')) {
-                document.getElementById('mobileCartCount').textContent = count;
-            }
-        }
-
-        function showNotification(message) {
-            // Create notification element
-            const notification = document.createElement('div');
-            notification.className =
-                'fixed bottom-4 right-4 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-md transition-opacity duration-500 ease-in-out z-50';
-            notification.innerHTML = message;
-
-            // Add to document
-            document.body.appendChild(notification);
-
-            // Remove after 3 seconds
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                setTimeout(() => {
-                    document.body.removeChild(notification);
-                }, 500);
-            }, 3000);
-        }
-
-        function showDetail(id) {
-            // Show modal
-            document.getElementById('detailModal').classList.remove('hidden');
-
-            // Load content (in a real implementation, this would be an AJAX call)
-            const modalContent = document.getElementById('modalContent');
-
-            // Find the sub jasa data
-            fetch(`/api/sub-jasa/${id}`)
-                .then(response => response.json())
-                .then(data => {
-                    let subJasa = data;
-                    modalContent.innerHTML = `
-                    <div>
-                        <h3 class="text-lg leading-6 font-medium text-gray-900 font-poppins" id="modal-title">
-                            ${subJasa.nama}
-                        </h3>
-                        <div class="mt-2">
-                            <span class="bg-blue-50 text-blue-700 py-1 px-3 rounded-full text-sm font-medium font-mono inline-block">
-                                Rp ${new Intl.NumberFormat('id-ID').format(subJasa.harga)}${subJasa.satuan ? '/'+subJasa.satuan : ''}
-                            </span>
-                        </div>
-                        
-                        <div class="mt-4">
-                            ${subJasa.gambar ? 
-                                `<img src="/storage/${subJasa.gambar}" alt="${subJasa.nama}" class="w-full h-48 object-cover rounded-md">` : 
-                                `<img src="https://source.unsplash.com/800x600/?construction,${encodeURIComponent(subJasa.nama)}" 
-                                                                                                                                                                                                                                                         alt="${subJasa.nama}" class="w-full h-48 object-cover rounded-md">`
-                            }
-                        </div>
-                        
-                        <div class="mt-4">
-                            <p class="text-sm text-gray-500">
-                                ${subJasa.deskripsi ? subJasa.deskripsi.replace(/\n/g, '<br>') : 'Tidak ada deskripsi'}
-                            </p>
-                        </div>
-                        
-                        <div class="mt-8 grid grid-cols-2 gap-4">
-                            <button class="inline-flex justify-center items-center px-4 py-2 bg-[#332E60] text-white rounded-md hover:bg-[#292650] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#332E60]">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                                </svg>
-                                Hubungi
-                            </button>
-                            
-                            ${isAuthenticated ? 
-                            `<button onclick="addToCartFromModal()" class="inline-flex justify-center items-center px-4 py-2 bg-[#F4C542] text-[#332E60] font-semibold rounded-md hover:bg-[#e0b53d] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F4C542]">
-                                                                                                                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                                                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                                                                                                                                                            </svg>
-                                                                                                                                                            Tambah ke Keranjang
-                                                                                                                                                        </button>` :
-                            `<a href="/login" class="inline-flex justify-center items-center px-4 py-2 bg-[#F4C542] text-[#332E60] font-semibold rounded-md hover:bg-[#e0b53d] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F4C542]">
-                                                                                                                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                                                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                                                                                                                            </svg>
-                                                                                                                                                            Login untuk Beli
-                                                                                                                                                        </a>`}
-                        </div>
-                    </div>
-                `;
-                })
-                .catch(error => {
-                    modalContent.innerHTML = `
-                    <div class="text-center py-10">
-                        <svg class="mx-auto h-12 w-12 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <p class="mt-2 text-gray-500">Gagal memuat data. Silakan coba lagi.</p>
-                    </div>
-                `;
-                });
         }
     </script>
 @endsection
