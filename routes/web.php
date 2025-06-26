@@ -11,9 +11,10 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\SkillController;
-use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\UlasanController;
 use App\Http\Controllers\TukangController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubJasaController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\LocationController;
@@ -77,6 +78,23 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/checkout/process', [CheckoutController::class, 'processCheckout'])->name('checkout.process');
     Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
 
+    // Profile Routes
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+    Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/profile/change-password', [ProfileController::class, 'showChangePasswordForm'])->name('profile.password');
+    Route::post('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.password.update');
+
+    // Customer Order Routes
+    Route::get('/customer/orders', [OrderController::class, 'customerIndex'])->name('customer.orders.index');
+    Route::get('/customer/orders/{order}', [OrderController::class, 'customerShow'])->name('customer.orders.show');
+    Route::post('/customer/orders/{order}/cancel', [OrderController::class, 'customerCancel'])->name('customer.orders.cancel');
+
+    // Customer Ulasan Routes
+    Route::post('/customer/orders/{order}/ulasan', [UlasanController::class, 'store'])->name('customer.ulasan.store');
+    Route::post('/customer/ulasan/success', [UlasanController::class, 'store'])->name('ulasan.store');
+    Route::get('/customer/ulasan/success', [UlasanController::class, 'success'])->name('ulasan.success');
+
     // Orders
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
@@ -87,7 +105,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/payments/{order}', [PaymentController::class, 'show'])->name('payments.show');
     Route::post('/payments/{order}/upload', [PaymentController::class, 'uploadProof'])->name('payments.upload');
 
-    Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+    // Guest ulasan routes
+    Route::get('/kirim-ulasan', [UlasanController::class, 'showGuestForm'])->name('ulasan.guest.form');
+    Route::post('/kirim-ulasan/submit', [UlasanController::class, 'submitGuestReview'])->name('ulasan.guest.submit');
+
+    // Legacy route that redirects to the new form
+    Route::post('/guest-reviews', [UlasanController::class, 'storeGuestReview'])->name('ulasan.store.guest');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -106,20 +129,20 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
         Route::patch('/orders/{order}/update-status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
         Route::patch('/orders/{order}/update-payment', [OrderController::class, 'updatePayment'])->name('orders.update-payment');
-
-        Route::get('/reviews', [ReviewController::class, 'index'])->name('admin.reviews.index');
-        Route::delete('/reviews/{review}', [ReviewController::class, 'destroy'])->name('admin.reviews.destroy');
     });
 
     Route::middleware(['tukang'])->group(function () {
         Route::get('/dashboard-tukang', [TukangDashboardController::class, 'index'])->name('tukang.dashboard');
-        Route::get('/profile', [TukangDashboardController::class, 'showProfile'])->name('profile');
-        Route::get('/profile/edit', [TukangDashboardController::class, 'editProfile'])->name('profile.edit');
-        Route::put('/profile/update', [TukangDashboardController::class, 'updateProfile'])->name('profile.update');
+
+        // Tukang Profile Routes
+        Route::get('/profile-tukang', [ProfileController::class, 'tukangShow'])->name('tukang.profile');
+        Route::get('/profile-tukang/edit', [ProfileController::class, 'tukangEdit'])->name('tukang.profile.edit');
+        Route::put('/profile-tukang', [ProfileController::class, 'tukangUpdate'])->name('tukang.profile.update');
 
         // Pesanan - sekarang akan menjadi tukang.orders.index
         Route::get('/pesanan-saya', [OrderController::class, 'tukangOrderIndex'])->name('tukang.pesanan.index');
         Route::get('/pesanan-saya/{order}', [OrderController::class, 'tukangOrderShow'])->name('tukang.pesanan.show');
+        Route::post('/pesanan-saya/{order}/complete', [OrderController::class, 'tukangOrderComplete'])->name('tukang.pesanan.complete');
         Route::get('/orders', [OrderController::class, 'tukangOrderIndex'])->name('orders.index');
         Route::get('/orders/{order}', [OrderController::class, 'tukangOrderShow'])->name('orders.show');
     });
@@ -135,4 +158,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::patch('/orders/{order}/update-payment', [OrderController::class, 'updatePaymentStatus'])->name('admin.orders.update-payment');
     Route::get('/payments/{payment}', [PaymentController::class, 'adminShow'])->name('admin.payments.show');
     Route::post('/payments/{payment}/verify', [PaymentController::class, 'verify'])->name('admin.payments.verify');
+
+    // Ulasan management
+    Route::get('/ulasan', [UlasanController::class, 'index'])->name('admin.ulasan.index');
+    Route::delete('/ulasan/{review}', [UlasanController::class, 'destroy'])->name('admin.ulasan.destroy');
 });

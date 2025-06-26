@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Support\Str;
 
 class Order extends Model
@@ -72,6 +73,30 @@ class Order extends Model
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    /**
+     * Get the sub jasa for this order (through the first order item)
+     * This is a convenience method to directly access the sub jasa
+     */
+    public function subJasa()
+    {
+        return $this->hasOneThrough(
+            SubJasa::class,
+            OrderItem::class,
+            'order_id', // Foreign key on OrderItem table
+            'id', // Foreign key on SubJasa table
+            'id', // Local key on Order table
+            'sub_jasa_id' // Local key on OrderItem table
+        );
+    }
+
+    /**
+     * Get the review associated with this order
+     */
+    public function review()
+    {
+        return $this->hasOne(Review::class);
     }
 
     // Variabel untuk status pembayaran

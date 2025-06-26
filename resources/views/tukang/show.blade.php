@@ -12,7 +12,7 @@
                         <p class="mt-1 max-w-2xl text-sm text-gray-500 font-roboto">Detail lengkap profil Anda.</p>
                     </div>
                     <div>
-                        <a href="{{ route('profile.edit') }}"
+                        <a href="{{ route('tukang.profile.edit') }}"
                             class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#332E60] hover:bg-[#292650] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F4C542]">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20"
                                 fill="currentColor">
@@ -47,16 +47,17 @@
                             </div>
 
                             <div class="w-full bg-gray-50 rounded-lg p-4 mt-4">
-                                <h3 class="text-lg font-semibold font-poppins text-gray-900 mb-2">Keahlian</h3>
+                                <h3 class="text-lg font-semibold font-poppins text-gray-900 mb-2">Layanan yang Ditawarkan
+                                </h3>
                                 <div class="flex flex-wrap gap-2">
                                     @if ($user->tukangProfile && $user->tukangProfile->skills->isNotEmpty())
                                         @foreach ($user->tukangProfile->skills as $skill)
                                             <span class="px-2 py-1 text-sm rounded-full bg-[#332E60] text-white">
-                                                {{ $skill->name }}
+                                                {{ $skill->nama }}
                                             </span>
                                         @endforeach
                                     @else
-                                        <span class="text-sm text-gray-500">Belum ada keahlian</span>
+                                        <span class="text-sm text-gray-500">Belum ada layanan yang ditawarkan</span>
                                     @endif
                                 </div>
                             </div>

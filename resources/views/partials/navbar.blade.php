@@ -10,15 +10,13 @@
             <div class="hidden md:flex items-center space-x-2">
                 <a href="/"
                     class="text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60] px-4 py-3 rounded-xl transition-all font-poppins font-semibold text-[15px] uppercase">Beranda</a>
-                <a href=""
-                    class="text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60] px-4 py-3 rounded-xl transition-all font-poppins font-semibold text-[15px] uppercase">Layanan</a>
-                <a href=""
-                    class="text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60] px-4 py-3 rounded-xl transition-all font-poppins font-semibold text-[15px] uppercase">Proyek</a>
-                <a href=""
-                    class="text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60] px-4 py-3 rounded-xl transition-all font-poppins font-semibold text-[15px] uppercase">Tentang
+                <a href="/#tentang-kami"
+                    class="text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60] px-4 py-3 rounded-xl transition-all font-poppins font-semibold text-[15px] uppercase scroll-smooth">Tentang
                     Kami</a>
-                <a href=""
-                    class="text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60] px-4 py-3 rounded-xl transition-all font-poppins font-semibold text-[15px] uppercase">Kontak</a>
+                <a href="/#layanan"
+                    class="text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60] px-4 py-3 rounded-xl transition-all font-poppins font-semibold text-[15px] uppercase scroll-smooth">Layanan</a>
+                <a href="/#kontak"
+                    class="text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60] px-4 py-3 rounded-xl transition-all font-poppins font-semibold text-[15px] uppercase scroll-smooth">Kontak</a>
             </div>
 
             <div class="hidden md:flex items-center">
@@ -61,11 +59,18 @@
                             <a href="{{ route('profile') }}"
                                 class="block px-4 py-2 text-sm text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60]/10 rounded-lg mx-1 my-1 font-poppins">Profil</a>
 
-                            <a href="{{ Auth::user()->role_id == 1 ? route('admin.dashboard') : route('tukang.dashboard') }}"
-                                class="block px-4 py-2 text-sm text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60]/10 rounded-lg mx-1 my-1 font-poppins">Dashboard</a>
+                            @if (Auth::user()->isAdmin())
+                                <!-- Admin menu items -->
+                                <a href="{{ route('admin.dashboard') }}"
+                                    class="block px-4 py-2 text-sm text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60]/10 rounded-lg mx-1 my-1 font-poppins">Dashboard</a>
+                            @elseif(Auth::user()->isTukang())
+                                <!-- Tukang menu items -->
+                                <a href="{{ route('tukang.dashboard') }}"
+                                    class="block px-4 py-2 text-sm text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60]/10 rounded-lg mx-1 my-1 font-poppins">Dashboard</a>
+                            @endif
 
-                            <!-- Tambahkan di userMenu dropdown (setelah link Profil) -->
-                            <a href="{{ route('orders.index') }}"
+                            <!-- Customer Orders - visible to all users -->
+                            <a href="{{ route('customer.orders.index') }}"
                                 class="block px-4 py-2 text-sm text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60]/10 rounded-lg mx-1 my-1 font-poppins">
                                 Pesanan Saya
                             </a>
@@ -132,32 +137,26 @@
                 @endauth
             </li>
             <li>
-                <a href=""
+                <a href="/"
                     class="block text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60] px-4 py-3 rounded-xl transition-all font-poppins font-semibold text-[15px] uppercase">
                     Beranda
                 </a>
             </li>
             <li>
-                <a href=""
-                    class="block text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60] px-4 py-3 rounded-xl transition-all font-poppins font-semibold text-[15px] uppercase">
-                    Layanan
-                </a>
-            </li>
-            <li>
-                <a href=""
-                    class="block text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60] px-4 py-3 rounded-xl transition-all font-poppins font-semibold text-[15px] uppercase">
-                    Proyek
-                </a>
-            </li>
-            <li>
-                <a href=""
-                    class="block text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60] px-4 py-3 rounded-xl transition-all font-poppins font-semibold text-[15px] uppercase">
+                <a href="/#tentang-kami"
+                    class="block text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60] px-4 py-3 rounded-xl transition-all font-poppins font-semibold text-[15px] uppercase scroll-smooth">
                     Tentang Kami
                 </a>
             </li>
             <li>
-                <a href=""
-                    class="block text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60] px-4 py-3 rounded-xl transition-all font-poppins font-semibold text-[15px] uppercase">
+                <a href="/#layanan"
+                    class="block text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60] px-4 py-3 rounded-xl transition-all font-poppins font-semibold text-[15px] uppercase scroll-smooth">
+                    Layanan
+                </a>
+            </li>
+            <li>
+                <a href="/#kontak"
+                    class="block text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60] px-4 py-3 rounded-xl transition-all font-poppins font-semibold text-[15px] uppercase scroll-smooth">
                     Kontak
                 </a>
             </li>
@@ -169,15 +168,26 @@
                         Profil
                     </a>
                 </li>
+                @if (Auth::user()->isAdmin())
+                    <!-- Admin mobile menu item -->
+                    <li>
+                        <a href="{{ route('admin.dashboard') }}"
+                            class="block text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60] px-4 py-3 rounded-xl transition-all font-poppins font-semibold text-[15px] uppercase">
+                            Dashboard
+                        </a>
+                    </li>
+                @elseif(Auth::user()->isTukang())
+                    <!-- Tukang mobile menu item -->
+                    <li>
+                        <a href="{{ route('tukang.dashboard') }}"
+                            class="block text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60] px-4 py-3 rounded-xl transition-all font-poppins font-semibold text-[15px] uppercase">
+                            Dashboard
+                        </a>
+                    </li>
+                @endif
+                <!-- Pesanan Saya link for all users -->
                 <li>
-                    <a href="{{ Auth::user()->role_id == 1 ? route('admin.dashboard') : route('tukang.dashboard') }}"
-                        class="block text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60] px-4 py-3 rounded-xl transition-all font-poppins font-semibold text-[15px] uppercase">
-                        Dashboard
-                    </a>
-                </li>
-                <!-- Tambahkan di mobile menu (setelah link Profil) -->
-                <li>
-                    <a href="{{ route('orders.index') }}"
+                    <a href="{{ route('customer.orders.index') }}"
                         class="block text-[#2A2C65] hover:text-[#F4C542] hover:bg-[#332E60] px-4 py-3 rounded-xl transition-all font-poppins font-semibold text-[15px] uppercase">
                         Pesanan Saya
                     </a>
@@ -262,5 +272,32 @@
 
         if (desktopCount) desktopCount.textContent = count;
         if (mobileCount) mobileCount.textContent = count;
+
+        // Add smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="/#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                // Get the hash without the # symbol
+                const targetId = this.getAttribute('href').split('#')[1];
+                const targetElement = document.getElementById(targetId);
+
+                if (targetElement) {
+                    // Hide mobile menu if it's open
+                    if (!mobileMenu.classList.contains('hidden')) {
+                        mobileMenu.classList.add('hidden');
+                    }
+
+                    // Scroll to the target element with smooth behavior
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                } else {
+                    // If target doesn't exist on the current page, navigate to the home page with the anchor
+                    window.location.href = this.getAttribute('href');
+                }
+            });
+        });
     });
 </script>

@@ -34,6 +34,7 @@
     <main>
         @yield('content')
     </main>
+    @include('partials.footer')
     <script>
         function Openbar() {
             document.querySelector('.sidebar').classList.toggle('left-[-300px]')

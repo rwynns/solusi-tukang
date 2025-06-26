@@ -9,12 +9,19 @@ use Illuminate\Http\Request;
 class HomeController extends Controller
 {
     /**
-     * Display the home page with jasa list
+     * Display the home page with jasa list and reviews
      */
     public function index()
     {
         $jasaList = Jasa::oldest()->get();
-        return view('index', compact('jasaList'));
+
+        // Get the latest reviews - limit to 3 for display
+        $latestReviews = \App\Models\Review::with(['user', 'order', 'order.subJasa.jasa'])
+            ->latest()
+            ->take(3)
+            ->get();
+
+        return view('index', compact('jasaList', 'latestReviews'));
     }
 
     /**

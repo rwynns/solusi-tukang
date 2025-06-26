@@ -21,7 +21,50 @@ class TukangDashboardController extends Controller
         // Load the tukang profile with its relationships
         $user->load(['tukangProfile.location', 'tukangProfile.skills']);
 
-        return view('dashboard.index-tukang', compact('user'));
+        // Get tukang profile id
+        $tukangProfileId = $user->tukangProfile ? $user->tukangProfile->id : null;
+
+        if (!$tukangProfileId) {
+            return view('tukang.index', compact('user'));
+        }
+
+        // Get order IDs where this tukang is assigned
+        $orderIds = DB::table('order_items')
+            ->where('tukang_profile_id', $tukangProfileId)
+            ->select('order_id')
+            ->distinct()
+            ->get()
+            ->pluck('order_id')
+            ->toArray();
+
+        // Calculate statistics
+        $stats = [
+            'total_orders' => count($orderIds),
+            'active_orders' => DB::table('orders')
+                ->whereIn('id', $orderIds)
+                ->where('status', 'processing')
+                ->count(),
+            'completed_orders' => DB::table('orders')
+                ->whereIn('id', $orderIds)
+                ->where('status', 'completed')
+                ->count(),
+            'total_earnings' => DB::table('order_items')
+                ->where('tukang_profile_id', $tukangProfileId)
+                ->sum('subtotal'),
+            'monthly_earnings' => DB::table('order_items')
+                ->where('tukang_profile_id', $tukangProfileId)
+                ->whereMonth('created_at', now()->month)
+                ->sum('subtotal'),
+        ];
+
+        // Get recent orders
+        $recent_orders = \App\Models\Order::whereIn('id', $orderIds)
+            ->with('orderItems')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        return view('tukang.index', compact('user', 'stats', 'recent_orders'));
     }
 
     public function editProfile()

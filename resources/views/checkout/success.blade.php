@@ -255,7 +255,7 @@
                 }
 
                 // Send AJAX request
-                fetch('{{ route('reviews.store') }}', {
+                fetch('{{ route('ulasan.store') }}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

@@ -100,15 +100,8 @@
                             Daftar Sekarang
                         </button>
 
-                        <div
-                            class="flex flex-col sm:flex-row sm:justify-between items-center mt-4 text-center sm:text-left">
-                            <!-- Verification Info -->
-                            <p class="text-xs text-gray-500 mb-2 sm:mb-0 sm:w-3/5 font-roboto">
-                                Dengan mendaftar, Anda akan menerima email verifikasi
-                            </p>
-
-                            <!-- Login Link -->
-                            <p class="text-sm text-gray-600 sm:text-right sm:w-2/5 font-roboto">
+                        <div class="flex flex-col sm:flex-row items-center mt-4 text-center sm:text-left">
+                            <p class="text-sm text-gray-600 sm:w-2/5 font-roboto">
                                 Sudah punya akun?
                                 <a href="" class="text-blue-600 hover:underline font-medium font-roboto">
                                     Masuk

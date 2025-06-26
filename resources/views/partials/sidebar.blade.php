@@ -86,7 +86,7 @@
                             Pilihan Pembayaran
                         </a>
 
-                        <a href="{{ route('admin.reviews.index') }}"
+                        <a href="{{ route('admin.ulasan.index') }}"
                             class="{{ request()->routeIs('admin.reviews.*') ? 'bg-[#3e3777] text-white' : 'text-gray-300 hover:bg-[#3e3777] hover:text-white' }} group flex items-center px-4 py-3 text-sm font-medium rounded-md">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke-width="1.5" stroke="currentColor" class="mr-3 h-6 w-6">
@@ -107,8 +107,8 @@
                             Pesanan Saya
                         </a>
 
-                        <a href="{{ route('profile') }}"
-                            class="{{ request()->routeIs('profile') && !request()->routeIs('profile.edit') ? 'bg-[#3e3777] text-white' : 'text-gray-300 hover:bg-[#3e3777] hover:text-white' }} group flex items-center px-4 py-3 text-sm font-medium rounded-md">
+                        <a href="{{ route('tukang.profile') }}"
+                            class="{{ request()->routeIs('tukang.profile') ? 'bg-[#3e3777] text-white' : 'text-gray-300 hover:bg-[#3e3777] hover:text-white' }} group flex items-center px-4 py-3 text-sm font-medium rounded-md">
                             <svg xmlns="http://www.w3.org/2000/svg" class="mr-3 h-6 w-6" fill="none"
                                 viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -117,8 +117,8 @@
                             Profil Saya
                         </a>
 
-                        <a href="{{ route('profile.edit') }}"
-                            class="{{ request()->routeIs('profile.edit') ? 'bg-[#3e3777] text-white' : 'text-gray-300 hover:bg-[#3e3777] hover:text-white' }} group flex items-center px-4 py-3 text-sm font-medium rounded-md">
+                        <a href="{{ route('tukang.profile.edit') }}"
+                            class="{{ request()->routeIs('tukang.profile.edit') ? 'bg-[#3e3777] text-white' : 'text-gray-300 hover:bg-[#3e3777] hover:text-white' }} group flex items-center px-4 py-3 text-sm font-medium rounded-md">
                             <svg xmlns="http://www.w3.org/2000/svg" class="mr-3 h-6 w-6" fill="none"
                                 viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

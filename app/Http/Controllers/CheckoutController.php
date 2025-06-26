@@ -12,6 +12,7 @@ use App\Models\SubJasa;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Log;
 
 class CheckoutController extends Controller
 {
@@ -22,7 +23,10 @@ class CheckoutController extends Controller
     {
         // Get cart data directly
         $cartController = new \App\Http\Controllers\CartController();
-        $cartData = $cartController->index($request);
+        $cartData = $cartController->getCartData($request);
+
+        // Debug cart data
+        Log::info('Cart Data:', ['data' => $cartData]);
 
         // If cart is empty, redirect
         if (!$cartData || empty($cartData)) {
@@ -31,14 +35,19 @@ class CheckoutController extends Controller
 
         // Transform for view compatibility
         $cart = collect($cartData)->map(function ($item) {
-            return [
+            $result = [
                 'id' => $item['sub_jasa_id'] ?? $item['id'],
                 'name' => $item['name'],
-                'price' => $item['price'],
+                'price' => (float)$item['price'], // Ensure price is a number
                 'image' => $item['image'],
                 'quantity' => $item['quantity'],
                 'satuan' => $item['satuan'] ?? null
             ];
+
+            // Debug transformed item
+            Log::info('Transformed Item:', ['item' => $result]);
+
+            return $result;
         })->toArray();
 
         return view('checkout.review', [
@@ -54,7 +63,7 @@ class CheckoutController extends Controller
     {
         // Get cart data directly
         $cartController = new \App\Http\Controllers\CartController();
-        $cartData = $cartController->index($request);
+        $cartData = $cartController->getCartData($request);
 
         if (!$cartData || empty($cartData)) {
             return redirect()->route('cart.index')->with('error', 'Keranjang belanja Anda kosong');
@@ -175,9 +184,8 @@ class CheckoutController extends Controller
         ]);
 
         // Get cart data using CartController for consistency
-        // Get cart data using CartController for consistency
         $cartController = new \App\Http\Controllers\CartController();
-        $cartData = $cartController->index($request);
+        $cartData = $cartController->getCartData($request);
 
         if (!$cartData || empty($cartData)) {
             return redirect()->route('cart.index')->with('error', 'Keranjang belanja Anda kosong');
@@ -185,6 +193,7 @@ class CheckoutController extends Controller
 
         $cart = $cartData;
         $selectedTechnicians = session('selected_technicians');
+        $deliveryInfo = session('checkout.delivery'); // Also fixed: You forgot to get this from session
 
         if (empty($cart) || empty($deliveryInfo) || empty($selectedTechnicians)) {
             return redirect()->route('cart.index')->with('error', 'Terjadi kesalahan dalam proses checkout');

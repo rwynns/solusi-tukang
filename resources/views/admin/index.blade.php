@@ -36,12 +36,13 @@
                             </div>
                             <div class="ml-5">
                                 <h3 class="text-gray-500 text-sm">Total Pengguna</h3>
-                                <div class="mt-1 text-3xl font-semibold text-[#332E60]">124</div>
+                                <div class="mt-1 text-3xl font-semibold text-[#332E60]">{{ \App\Models\User::count() }}
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Proyek Card -->
+                    <!-- Tukang Card -->
                     <div class="bg-white rounded-lg shadow p-6">
                         <div class="flex items-center">
                             <div
@@ -49,12 +50,13 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
                                     stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                        d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
                                 </svg>
                             </div>
                             <div class="ml-5">
-                                <h3 class="text-gray-500 text-sm">Proyek Aktif</h3>
-                                <div class="mt-1 text-3xl font-semibold text-[#332E60]">23</div>
+                                <h3 class="text-gray-500 text-sm">Total Tukang</h3>
+                                <div class="mt-1 text-3xl font-semibold text-[#332E60]">
+                                    {{ \App\Models\TukangProfile::count() }}</div>
                             </div>
                         </div>
                     </div>
@@ -72,12 +74,14 @@
                             </div>
                             <div class="ml-5">
                                 <h3 class="text-gray-500 text-sm">Pendapatan Bulan Ini</h3>
-                                <div class="mt-1 text-3xl font-semibold text-[#332E60]">Rp45.8jt</div>
+                                <div class="mt-1 text-3xl font-semibold text-[#332E60]">
+                                    Rp{{ number_format(\App\Models\Order::whereMonth('created_at', date('m'))->whereYear('created_at', date('Y'))->where('payment_status', 'paid')->sum('total_amount') / 1000000, 1) }}jt
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Konsultasi Card -->
+                    <!-- Pesanan Card -->
                     <div class="bg-white rounded-lg shadow p-6">
                         <div class="flex items-center">
                             <div
@@ -85,259 +89,102 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
                                     stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                        d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                                 </svg>
                             </div>
                             <div class="ml-5">
-                                <h3 class="text-gray-500 text-sm">Permintaan Konsultasi</h3>
-                                <div class="mt-1 text-3xl font-semibold text-[#332E60]">18</div>
+                                <h3 class="text-gray-500 text-sm">Pesanan Aktif</h3>
+                                <div class="mt-1 text-3xl font-semibold text-[#332E60]">
+                                    {{ \App\Models\Order::where('status', 'processing')->count() }}</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Recent Projects and Activity -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Recent Projects -->
-                    <div class="bg-white rounded-lg shadow overflow-hidden">
-                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                            <h3 class="text-lg font-medium text-gray-700">Proyek Terbaru</h3>
-                        </div>
-                        <div class="p-4">
-                            <div class="divide-y divide-gray-200">
-                                <!-- Project 1 -->
-                                <div class="py-3">
-                                    <div class="flex items-center justify-between">
-                                        <div>
-                                            <h4 class="text-sm font-medium text-[#332E60]">Renovasi Rumah Bapak Joko</h4>
-                                            <p class="text-xs text-gray-500">Jl. Merdeka No. 123, Jakarta</p>
-                                        </div>
-                                        <span
-                                            class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Aktif</span>
-                                    </div>
-                                    <div class="mt-2 flex justify-between text-xs text-gray-500">
-                                        <span>Progress: 65%</span>
-                                        <span>Deadline: 20 Mei 2025</span>
-                                    </div>
-                                    <div class="mt-2 w-full bg-gray-200 rounded-full h-2">
-                                        <div class="bg-[#F4C542] h-2 rounded-full" style="width: 65%"></div>
-                                    </div>
-                                </div>
+                <!-- Recent Orders -->
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-medium text-gray-700">Pesanan Terbaru</h3>
+                    </div>
+                    <div class="p-4">
+                        <div class="divide-y divide-gray-200">
+                            @php
+                                $recentOrders = \App\Models\Order::with(['user', 'items.subJasa'])
+                                    ->latest()
+                                    ->take(3)
+                                    ->get();
 
-                                <!-- Project 2 -->
+                                // Define order status colors and progress percentages
+                                $orderStatusColors = [
+                                    'pending' => [
+                                        'bg' => 'bg-yellow-100',
+                                        'text' => 'text-yellow-800',
+                                        'progress' => '25%',
+                                    ],
+                                    'processing' => [
+                                        'bg' => 'bg-blue-100',
+                                        'text' => 'text-blue-800',
+                                        'progress' => '50%',
+                                    ],
+                                    'completed' => [
+                                        'bg' => 'bg-green-100',
+                                        'text' => 'text-green-800',
+                                        'progress' => '100%',
+                                    ],
+                                    'cancelled' => [
+                                        'bg' => 'bg-red-100',
+                                        'text' => 'text-red-800',
+                                        'progress' => '0%',
+                                    ],
+                                ];
+                            @endphp
+
+                            @forelse($recentOrders as $order)
+                                @php
+                                    $statusInfo = $orderStatusColors[$order->status] ?? $orderStatusColors['pending'];
+                                @endphp
                                 <div class="py-3">
                                     <div class="flex items-center justify-between">
                                         <div>
-                                            <h4 class="text-sm font-medium text-[#332E60]">Konstruksi Gedung Kantor PT ABC
+                                            <h4 class="text-sm font-medium text-[#332E60]">
+                                                <a href="{{ route('admin.orders.show', $order->id) }}"
+                                                    class="hover:text-[#F4C542]">
+                                                    Order #{{ $order->order_number }}
+                                                </a>
                                             </h4>
-                                            <p class="text-xs text-gray-500">Jl. Sudirman, Jakarta Selatan</p>
+                                            <p class="text-xs text-gray-500">{{ $order->customer_name }} -
+                                                {{ $order->customer_phone }}</p>
                                         </div>
                                         <span
-                                            class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Aktif</span>
+                                            class="px-2 py-1 text-xs rounded-full {{ $statusInfo['bg'] }} {{ $statusInfo['text'] }}">
+                                            {{ ucfirst($order->status) }}
+                                        </span>
                                     </div>
                                     <div class="mt-2 flex justify-between text-xs text-gray-500">
-                                        <span>Progress: 30%</span>
-                                        <span>Deadline: 15 Juli 2025</span>
+                                        <span>Total: Rp{{ number_format($order->total_amount, 0, ',', '.') }}</span>
+                                        <span>
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline-block mr-1"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                            {{ $order->created_at->format('d M Y') }}
+                                        </span>
                                     </div>
                                     <div class="mt-2 w-full bg-gray-200 rounded-full h-2">
-                                        <div class="bg-[#F4C542] h-2 rounded-full" style="width: 30%"></div>
+                                        <div class="bg-[#F4C542] h-2 rounded-full"
+                                            style="width: {{ $statusInfo['progress'] }}"></div>
                                     </div>
                                 </div>
-
-                                <!-- Project 3 -->
-                                <div class="py-3">
-                                    <div class="flex items-center justify-between">
-                                        <div>
-                                            <h4 class="text-sm font-medium text-[#332E60]">Instalasi Listrik Ruko Baru</h4>
-                                            <p class="text-xs text-gray-500">Jl. Kebon Jeruk, Jakarta Barat</p>
-                                        </div>
-                                        <span
-                                            class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Pending</span>
-                                    </div>
-                                    <div class="mt-2 flex justify-between text-xs text-gray-500">
-                                        <span>Progress: 15%</span>
-                                        <span>Deadline: 5 Juni 2025</span>
-                                    </div>
-                                    <div class="mt-2 w-full bg-gray-200 rounded-full h-2">
-                                        <div class="bg-[#F4C542] h-2 rounded-full" style="width: 15%"></div>
-                                    </div>
+                            @empty
+                                <div class="py-3 text-center text-gray-500">
+                                    Belum ada pesanan
                                 </div>
-                            </div>
-                            <div class="mt-4">
-                                <a href="#" class="text-sm font-medium text-[#F4C542] hover:text-[#e0b53d]">Lihat
-                                    semua proyek →</a>
-                            </div>
+                            @endforelse
                         </div>
-                    </div>
-
-                    <!-- Recent Activity -->
-                    <div class="bg-white rounded-lg shadow overflow-hidden">
-                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                            <h3 class="text-lg font-medium text-gray-700">Aktivitas Terbaru</h3>
-                        </div>
-                        <div class="p-4">
-                            <ul class="divide-y divide-gray-200">
-                                <li class="py-3">
-                                    <div class="flex space-x-3">
-                                        <div class="flex-shrink-0">
-                                            <div
-                                                class="h-8 w-8 rounded-full bg-[#332E60] flex items-center justify-center text-white text-xs font-medium">
-                                                JD</div>
-                                        </div>
-                                        <div class="min-w-0 flex-1">
-                                            <p class="text-sm text-gray-800">
-                                                <a href="#" class="font-medium text-[#332E60]">John Doe</a>
-                                                mendaftar sebagai tukang baru
-                                            </p>
-                                            <p class="text-xs text-gray-500">30 menit yang lalu</p>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li class="py-3">
-                                    <div class="flex space-x-3">
-                                        <div class="flex-shrink-0">
-                                            <div
-                                                class="h-8 w-8 rounded-full bg-[#332E60] flex items-center justify-center text-white text-xs font-medium">
-                                                AS</div>
-                                        </div>
-                                        <div class="min-w-0 flex-1">
-                                            <p class="text-sm text-gray-800">
-                                                <a href="#" class="font-medium text-[#332E60]">Ani Suryani</a>
-                                                mengajukan permintaan konsultasi baru
-                                            </p>
-                                            <p class="text-xs text-gray-500">2 jam yang lalu</p>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li class="py-3">
-                                    <div class="flex space-x-3">
-                                        <div class="flex-shrink-0">
-                                            <div
-                                                class="h-8 w-8 rounded-full bg-[#332E60] flex items-center justify-center text-white text-xs font-medium">
-                                                BW</div>
-                                        </div>
-                                        <div class="min-w-0 flex-1">
-                                            <p class="text-sm text-gray-800">
-                                                <a href="#" class="font-medium text-[#332E60]">Budi Winarno</a>
-                                                menyelesaikan proyek "Renovasi Dapur"
-                                            </p>
-                                            <p class="text-xs text-gray-500">Kemarin, 16:42</p>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li class="py-3">
-                                    <div class="flex space-x-3">
-                                        <div class="flex-shrink-0">
-                                            <div
-                                                class="h-8 w-8 rounded-full bg-[#332E60] flex items-center justify-center text-white text-xs font-medium">
-                                                RS</div>
-                                        </div>
-                                        <div class="min-w-0 flex-1">
-                                            <p class="text-sm text-gray-800">
-                                                <a href="#" class="font-medium text-[#332E60]">Rini Susanti</a>
-                                                memberikan ulasan 5 bintang untuk proyek "Instalasi Listrik"
-                                            </p>
-                                            <p class="text-xs text-gray-500">Kemarin, 10:30</p>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                            <div class="mt-4">
-                                <a href="#" class="text-sm font-medium text-[#F4C542] hover:text-[#e0b53d]">Lihat
-                                    semua aktivitas →</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Quick Actions and Todo List -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-                    <!-- Quick Actions -->
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h3 class="text-lg font-medium text-gray-700 mb-4">Aksi Cepat</h3>
-                        <div class="grid grid-cols-2 gap-4">
-                            <a href="#"
-                                class="bg-[#332E60] text-white p-4 rounded-lg flex items-center justify-center hover:bg-[#282356] transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                                </svg>
-                                <span>Tambah Pengguna</span>
-                            </a>
-                            <a href="#"
-                                class="bg-[#332E60] text-white p-4 rounded-lg flex items-center justify-center hover:bg-[#282356] transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                                </svg>
-                                <span>Buat Laporan</span>
-                            </a>
-                            <a href="#"
-                                class="bg-[#332E60] text-white p-4 rounded-lg flex items-center justify-center hover:bg-[#282356] transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 4v16m8-8H4" />
-                                </svg>
-                                <span>Tambah Proyek</span>
-                            </a>
-                            <a href="#"
-                                class="bg-[#332E60] text-white p-4 rounded-lg flex items-center justify-center hover:bg-[#282356] transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                <span>Jadwalkan</span>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Todo List -->
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h3 class="text-lg font-medium text-gray-700 mb-4">Tugas Hari Ini</h3>
-                        <div class="space-y-3">
-                            <div class="flex items-center">
-                                <input id="todo1" type="checkbox"
-                                    class="h-4 w-4 text-[#F4C542] focus:ring-[#F4C542] border-gray-300 rounded">
-                                <label for="todo1" class="ml-3 block text-sm text-gray-700">Review permintaan
-                                    konsultasi baru (5)</label>
-                            </div>
-                            <div class="flex items-center">
-                                <input id="todo2" type="checkbox"
-                                    class="h-4 w-4 text-[#F4C542] focus:ring-[#F4C542] border-gray-300 rounded">
-                                <label for="todo2" class="ml-3 block text-sm text-gray-700">Konfirmasi pembayaran
-                                    proyek Gedung XYZ</label>
-                            </div>
-                            <div class="flex items-center">
-                                <input id="todo3" type="checkbox"
-                                    class="h-4 w-4 text-[#F4C542] focus:ring-[#F4C542] border-gray-300 rounded" checked>
-                                <label for="todo3" class="ml-3 block text-sm text-gray-500 line-through">Update status
-                                    proyek renovasi kantor</label>
-                            </div>
-                            <div class="flex items-center">
-                                <input id="todo4" type="checkbox"
-                                    class="h-4 w-4 text-[#F4C542] focus:ring-[#F4C542] border-gray-300 rounded">
-                                <label for="todo4" class="ml-3 block text-sm text-gray-700">Follow-up klien untuk
-                                    proyek baru</label>
-                            </div>
-                            <div class="flex items-center">
-                                <input id="todo5" type="checkbox"
-                                    class="h-4 w-4 text-[#F4C542] focus:ring-[#F4C542] border-gray-300 rounded">
-                                <label for="todo5" class="ml-3 block text-sm text-gray-700">Review laporan
-                                    bulanan</label>
-                            </div>
-                        </div>
-                        <div class="mt-4 flex">
-                            <input type="text"
-                                class="flex-1 rounded-l-md border-gray-300 shadow-sm focus:border-[#F4C542] focus:ring focus:ring-[#F4C542] focus:ring-opacity-20"
-                                placeholder="Tambah tugas baru...">
-                            <button type="button"
-                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-r-md shadow-sm text-white bg-[#F4C542] hover:bg-[#e0b53d] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F4C542]">
-                                Tambah
-                            </button>
+                        <div class="mt-4">
+                            <a href="{{ route('admin.orders.index') }}"
+                                class="text-sm font-medium text-[#F4C542] hover:text-[#e0b53d]">Lihat semua pesanan →</a>
                         </div>
                     </div>
                 </div>

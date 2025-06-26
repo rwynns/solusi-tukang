@@ -7,6 +7,7 @@ use App\Models\SubJasa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 
@@ -19,7 +20,7 @@ class CartController extends Controller
     {
         if (Auth::check()) {
             // For logged in users, get cart from database
-            $cartItems = Cart::with(['subJasa.jasa', 'subJasa.kategori'])
+            $cartItems = Cart::with(['subJasa.jasa'])  // Remove 'subJasa.kategori'
                 ->forUser(Auth::id())
                 ->get();
 
@@ -330,7 +331,7 @@ class CartController extends Controller
                 ]);
             }
         } catch (\Exception $e) {
-            \Log::error('Cart getData error: ' . $e->getMessage());
+            Log::error('Cart getData error: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -463,5 +464,58 @@ class CartController extends Controller
                 'cart' => $cart
             ]);
         }
+    }
+
+    /**
+     * Get cart data for AJAX requests
+     */
+    public function getCartData(Request $request)
+    {
+        if (Auth::check()) {
+            // For logged in users, get cart from database
+            $cartItems = Cart::with(['subJasa.jasa'])
+                ->forUser(Auth::id())
+                ->get();
+
+            if ($cartItems->count() > 0) {
+                return $cartItems->map(function ($item) {
+                    // Make sure price is properly cast to a numeric value
+                    return [
+                        'sub_jasa_id' => $item->subJasa->id,
+                        'id' => $item->id,
+                        'name' => $item->subJasa->nama,
+                        'price' => (float)$item->subJasa->harga, // Changed from price to harga
+                        'image' => $item->subJasa->gambar, // Changed from image to gambar
+                        'quantity' => $item->quantity,
+                        'satuan' => $item->subJasa->satuan
+                    ];
+                })->toArray();
+            }
+        } else {
+            // For guests, get cart from cookie
+            $cookieCart = json_decode(request()->cookie('cart'), true) ?: [];
+
+            if (!empty($cookieCart)) {
+                $subJasaIds = array_keys($cookieCart);
+                $subJasas = SubJasa::whereIn('id', $subJasaIds)->with('jasa')->get();
+
+                $cartItems = collect();
+                foreach ($subJasas as $subJasa) {
+                    $cartItems->push([
+                        'sub_jasa_id' => $subJasa->id,
+                        'id' => $subJasa->id,
+                        'name' => $subJasa->nama, // Changed from name to nama
+                        'price' => (float)$subJasa->harga, // Changed from price to harga
+                        'image' => $subJasa->gambar, // Changed from image to gambar
+                        'quantity' => $cookieCart[$subJasa->id],
+                        'satuan' => $subJasa->satuan
+                    ]);
+                }
+
+                return $cartItems->toArray();
+            }
+        }
+
+        return [];
     }
 }

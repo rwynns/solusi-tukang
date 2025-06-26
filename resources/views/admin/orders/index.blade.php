@@ -3,26 +3,6 @@
 @section('title', 'Kelola Pemesanan')
 
 @section('content')
-    <!-- Page header -->
-    <div class="bg-white shadow">
-        <div class="px-4 sm:px-6 lg:px-8 py-6">
-            <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-bold font-poppins text-gray-900">Kelola Pemesanan</h1>
-                <div class="flex space-x-3">
-                    <a href="#" onclick="exportOrders(event)"
-                        class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium font-poppins rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F4C542]">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                                clip-rule="evenodd" />
-                        </svg>
-                        Export Data
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-gray-50">
         <!-- Filter & Search -->
         <div class="bg-white px-4 py-3 shadow rounded-lg mb-6">

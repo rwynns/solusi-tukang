@@ -25,7 +25,7 @@
                         </div>
                     @endif
 
-                    <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
+                    <form action="{{ route('tukang.profile.update') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
 
@@ -118,7 +118,8 @@
                             </div>
 
                             <div class="sm:col-span-2">
-                                <label for="skills" class="block mb-1 text-sm font-medium font-poppins">Keahlian</label>
+                                <label for="skills" class="block mb-1 text-sm font-medium font-poppins">Layanan yang
+                                    Ditawarkan</label>
                                 <div class="border border-gray-300 rounded-lg p-3 bg-white">
                                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                                         @foreach ($skills as $skill)
@@ -131,13 +132,14 @@
                                                 </div>
                                                 <div class="ml-3 text-sm">
                                                     <label for="skill_{{ $skill->id }}"
-                                                        class="font-medium text-gray-700">{{ $skill->name }}</label>
+                                                        class="font-medium text-gray-700">{{ $skill->nama }}</label>
                                                 </div>
                                             </div>
                                         @endforeach
                                     </div>
                                 </div>
-                                <p class="mt-1 text-xs text-gray-500 font-roboto">Pilih minimal satu keahlian</p>
+                                <p class="mt-1 text-xs text-gray-500 font-roboto">Pilih jenis layanan yang Anda tawarkan
+                                </p>
                             </div>
 
                             <div class="sm:col-span-2">
@@ -152,7 +154,7 @@
 
                         <div class="pt-5 mt-4 border-t border-gray-200">
                             <div class="flex justify-end">
-                                <a href="{{ route('profile') }}"
+                                <a href="{{ route('tukang.profile') }}"
                                     class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-semibold font-poppins text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#332E60] mr-3 cursor-pointer">
                                     Batal
                                 </a>

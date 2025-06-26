@@ -96,7 +96,7 @@ class SubJasaController extends Controller
     public function show(SubJasa $subJasa)
     {
         $subJasa->load('jasa'); // Eager load jasa relationship
-        return view('sub-jasa.show', compact('subJasa'));
+        return view('admin.sub-jasa.show', compact('subJasa'));
     }
 
     /**
@@ -105,7 +105,7 @@ class SubJasaController extends Controller
     public function edit(SubJasa $subJasa)
     {
         $jasaList = Jasa::orderBy('nama')->get();
-        return view('sub-jasa.edit', compact('subJasa', 'jasaList'));
+        return view('admin.sub-jasa.edit', compact('subJasa', 'jasaList'));
     }
 
     /**

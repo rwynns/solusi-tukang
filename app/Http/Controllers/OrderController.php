@@ -260,9 +260,128 @@ class OrderController extends Controller
                 ->with('error', 'Anda tidak memiliki akses ke pesanan ini');
         }
 
-        // Load relasi yang dibutuhkan
-        $order->load(['orderItems.tukangProfile.user', 'user', 'payment', 'paymentOption']);
-
         return view('tukang.orders.show', compact('order'));
+    }
+
+    /**
+     * Mark an order as completed by tukang
+     */
+    public function tukangOrderComplete(Request $request, Order $order)
+    {
+        $tukangProfile = Auth::user()->tukangProfile;
+
+        if (!$tukangProfile) {
+            return redirect()->route('dashboard')
+                ->with('error', 'Profil tukang tidak ditemukan');
+        }
+
+        // Cek apakah tukang ditugaskan untuk pesanan ini
+        $isAssigned = DB::table('order_items')
+            ->where('order_id', $order->id)
+            ->where('tukang_profile_id', $tukangProfile->id)
+            ->exists();
+
+        if (!$isAssigned) {
+            return redirect()->route('tukang.pesanan.index')
+                ->with('error', 'Anda tidak memiliki akses ke pesanan ini');
+        }
+
+        // Cek apakah status order saat ini adalah "processing"
+        if ($order->status !== 'processing') {
+            return redirect()->route('tukang.pesanan.show', $order)
+                ->with('error', 'Pesanan ini tidak dapat diselesaikan karena status saat ini: ' . ucfirst($order->status));
+        }
+
+        try {
+            // Perbarui status order menjadi completed
+            $order->status = 'completed';
+
+            // Simpan catatan penyelesaian jika ada
+            if ($request->has('completion_notes') && !empty($request->completion_notes)) {
+                // Jika perlu menyimpan catatan penyelesaian, tambahkan ke notes order atau buat kolom khusus
+                $order->notes = $order->notes
+                    ? $order->notes . "\n\nCatatan Penyelesaian: " . $request->completion_notes
+                    : "Catatan Penyelesaian: " . $request->completion_notes;
+            }
+
+            $order->save();
+
+            return redirect()->route('tukang.pesanan.index')
+                ->with('success', 'Pesanan berhasil diselesaikan');
+        } catch (\Exception $e) {
+            return redirect()->route('tukang.pesanan.show', $order)
+                ->with('error', 'Gagal menyelesaikan pesanan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Display a listing of orders for current user (customer)
+     */
+    public function customerIndex()
+    {
+        $orders = Order::where('user_id', Auth::id())
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return view('customer.orders.index', [
+            'orders' => $orders,
+            'title' => 'Pesanan Saya'
+        ]);
+    }
+
+    /**
+     * Display the specified order for customer
+     */
+    public function customerShow(Order $order)
+    {
+        // Ensure user can only see their own orders
+        if ($order->user_id !== Auth::id()) {
+            abort(403, 'Anda tidak memiliki akses ke pesanan ini');
+        }
+
+        return view('customer.orders.show', [
+            'order' => $order->load(['items.tukangProfile.user', 'items.subJasa', 'paymentOption', 'payment']),
+            'title' => 'Detail Pesanan #' . $order->order_number
+        ]);
+    }
+
+    /**
+     * Cancel an order (customer)
+     */
+    public function customerCancel(Order $order)
+    {
+        // Ensure user can only cancel their own orders
+        if ($order->user_id !== Auth::id()) {
+            abort(403, 'Anda tidak memiliki akses ke pesanan ini');
+        }
+
+        // Check if the order can be cancelled (only pending or unpaid orders)
+        if (!in_array($order->status, ['pending', 'unpaid'])) {
+            return redirect()->back()->with('error', 'Pesanan ini tidak dapat dibatalkan karena sudah diproses.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Update order status to cancelled
+            $order->status = 'cancelled';
+            $order->payment_status = 'cancelled';
+            $order->save();
+
+            // Update payment if exists
+            if ($order->payment) {
+                $order->payment->status = 'cancelled';
+                $order->payment->save();
+            }
+
+            DB::commit();
+
+            return redirect()->route('customer.orders.index')
+                ->with('success', 'Pesanan #' . $order->order_number . ' berhasil dibatalkan.');
+        } catch (\Exception $e) {
+            DB::rollback();
+            return redirect()->back()
+                ->with('error', 'Gagal membatalkan pesanan: ' . $e->getMessage());
+        }
     }
 }
