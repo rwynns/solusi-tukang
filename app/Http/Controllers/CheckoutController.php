@@ -162,14 +162,75 @@ class CheckoutController extends Controller
     /**
      * Choose payment method
      */
-    public function paymentMethod()
+    public function paymentMethod(Request $request)
     {
-        $paymentOptions = PaymentOption::where('is_active', true)->get();
+        try {
+            // Get cart data using CartController for consistency
+            $cartController = new \App\Http\Controllers\CartController();
+            $cartData = $cartController->getCartData($request);
 
-        return view('checkout.payment', [
-            'paymentOptions' => $paymentOptions,
-            'currentStep' => 4
-        ]);
+            // Debug cart data
+            Log::info('Payment Method - Cart Data:', ['data' => $cartData]);
+
+            // If cart is empty, redirect
+            if (!$cartData || empty($cartData)) {
+                Log::warning('Payment Method - Empty cart, redirecting to cart index');
+                return redirect()->route('cart.index')->with('error', 'Keranjang belanja Anda kosong');
+            }
+
+            // Ensure $cartData is an array or collection
+            if (!is_array($cartData) && !($cartData instanceof \Illuminate\Support\Collection)) {
+                Log::error('Payment Method - Invalid cart data type:', ['type' => gettype($cartData)]);
+                return redirect()->route('cart.index')->with('error', 'Terjadi kesalahan dengan data keranjang');
+            }
+
+            // Transform for view compatibility
+            $cart = collect($cartData)->map(function ($item) {
+                $transformedItem = [
+                    'id' => $item['sub_jasa_id'] ?? $item['id'],
+                    'name' => $item['name'],
+                    'price' => (float)($item['price'] ?? 0), // Add null check
+                    'image' => $item['image'] ?? null,
+                    'quantity' => $item['quantity'] ?? 1,
+                    'satuan' => $item['satuan'] ?? 'pcs'
+                ];
+
+                Log::info('Payment Method - Transformed Item:', ['item' => $transformedItem]);
+                return $transformedItem;
+            });
+
+            // Calculate total
+            $total = $cart->sum(function ($item) {
+                return $item['price'] * $item['quantity'];
+            });
+
+            Log::info('Payment Method - Final Data:', [
+                'cart_count' => $cart->count(),
+                'total' => $total
+            ]);
+
+            $paymentOptions = PaymentOption::where('is_active', true)->get();
+
+            // Generate temporary order number for display
+            $tempOrderNumber = 'ST-' . date('Ymd') . '-' . strtoupper(\Illuminate\Support\Str::random(6));
+            session(['temp_order_number' => $tempOrderNumber]);
+
+            return view('checkout.payment', [
+                'paymentOptions' => $paymentOptions,
+                'cart' => $cart->toArray(), // Convert collection to array for view
+                'total' => $total,
+                'tempOrderNumber' => $tempOrderNumber,
+                'currentStep' => 4
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Payment Method Error:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->route('cart.index')
+                ->with('error', 'Terjadi kesalahan saat memproses halaman pembayaran. Silakan coba lagi.');
+        }
     }
 
     /**

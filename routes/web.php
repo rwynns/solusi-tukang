@@ -153,9 +153,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/orders', [OrderController::class, 'adminIndex'])->name('admin.orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'adminShow'])->name('admin.orders.show');
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.status');
+    Route::patch('/orders/{order}/update-payment', [OrderController::class, 'updatePaymentStatus'])->name('admin.orders.update-payment');
 
     Route::get('/payments', [PaymentController::class, 'adminIndex'])->name('admin.payments.index');
-    Route::patch('/orders/{order}/update-payment', [OrderController::class, 'updatePaymentStatus'])->name('admin.orders.update-payment');
     Route::get('/payments/{payment}', [PaymentController::class, 'adminShow'])->name('admin.payments.show');
     Route::post('/payments/{payment}/verify', [PaymentController::class, 'verify'])->name('admin.payments.verify');
 

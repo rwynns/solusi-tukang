@@ -15,10 +15,10 @@ class HomeController extends Controller
     {
         $jasaList = Jasa::oldest()->get();
 
-        // Get the latest reviews - limit to 3 for display
-        $latestReviews = \App\Models\Review::with(['user', 'order', 'order.subJasa.jasa'])
+        // Get the latest reviews - limit to 6 for display
+        $latestReviews = \App\Models\Review::with(['user', 'order', 'order.items.subJasa.jasa'])
             ->latest()
-            ->take(3)
+            ->take(6)
             ->get();
 
         return view('index', compact('jasaList', 'latestReviews'));

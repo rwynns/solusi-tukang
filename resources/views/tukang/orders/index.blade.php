@@ -187,7 +187,20 @@
 @section('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Jika ada fungsi JavaScript tambahan untuk halaman ini
+            // Handle filter form submission
+            const filterForm = document.querySelector('form[action="{{ route('tukang.pesanan.index') }}"]');
+            if (filterForm) {
+                filterForm.addEventListener('submit', function(e) {
+                    // Remove empty inputs before submitting
+                    const inputs = this.querySelectorAll('input, select');
+                    inputs.forEach(input => {
+                        if (!input.value || input.value.trim() === '') {
+                            input.removeAttribute('name');
+                        }
+                    });
+                });
+            }
+
             console.log('Halaman Pesanan Tukang loaded');
         });
     </script>

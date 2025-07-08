@@ -100,8 +100,7 @@ class Order extends Model
     }
 
     // Variabel untuk status pembayaran
-    const PAYMENT_STATUS_PENDING = 'pending';
+    const PAYMENT_STATUS_UNPAID = 'unpaid';
     const PAYMENT_STATUS_VERIFYING = 'verifying';
     const PAYMENT_STATUS_PAID = 'paid';
-    const PAYMENT_STATUS_CANCELLED = 'cancelled';
 }

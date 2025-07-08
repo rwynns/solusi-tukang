@@ -53,10 +53,29 @@ class OrderController extends Controller
             return redirect()->back()->with('error', 'Hanya pesanan dengan status menunggu yang dapat dibatalkan');
         }
 
-        $order->status = 'cancelled';
-        $order->save();
+        try {
+            DB::beginTransaction();
 
-        return redirect()->route('orders.show', $order)->with('success', 'Pesanan berhasil dibatalkan');
+            // Update order status to cancelled
+            $order->status = 'cancelled';
+            // Set payment_status to 'unpaid' instead of 'cancelled' since 'cancelled' is not in enum
+            $order->payment_status = 'unpaid';
+            $order->save();
+
+            // Update payment if exists
+            if ($order->payment) {
+                // Use 'rejected' as it's available in payments table enum ['pending', 'verified', 'rejected']
+                $order->payment->status = 'rejected';
+                $order->payment->save();
+            }
+
+            DB::commit();
+
+            return redirect()->route('orders.show', $order)->with('success', 'Pesanan berhasil dibatalkan');
+        } catch (\Exception $e) {
+            DB::rollback();
+            return redirect()->back()->with('error', 'Gagal membatalkan pesanan: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -66,20 +85,37 @@ class OrderController extends Controller
     {
         $query = Order::with(['user', 'payment']);
 
-        // Filter by status if provided
-        if ($request->has('status')) {
+        // Filter by search (order number, customer name, customer phone, user email)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('order_number', 'like', '%' . $search . '%')
+                    ->orWhere('customer_name', 'like', '%' . $search . '%')
+                    ->orWhere('customer_phone', 'like', '%' . $search . '%')
+                    ->orWhereHas('user', function ($userQuery) use ($search) {
+                        $userQuery->where('email', 'like', '%' . $search . '%');
+                    });
+            });
+        }
+
+        // Filter by status if provided and not empty
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // Filter by payment status if provided
-        if ($request->has('payment_status')) {
+        // Filter by payment status if provided and not empty
+        if ($request->filled('payment_status')) {
             $query->where('payment_status', $request->payment_status);
         }
 
         $orders = $query->orderBy('created_at', 'desc')->paginate(15);
 
+        // Append query parameters to pagination links
+        $orders->appends($request->query());
+
         return view('admin.orders.index', [
             'orders' => $orders,
+            'searchFilter' => $request->search,
             'statusFilter' => $request->status,
             'paymentStatusFilter' => $request->payment_status
         ]);
@@ -107,7 +143,7 @@ class OrderController extends Controller
     public function updatePaymentStatus(Request $request, Order $order)
     {
         $request->validate([
-            'payment_status' => 'required|in:pending,verifying,paid,cancelled'
+            'payment_status' => 'required|in:unpaid,verifying,paid'
         ]);
         try {
             // Begin transaction
@@ -121,10 +157,9 @@ class OrderController extends Controller
             if ($order->payment) {
                 // Mapping dari order payment_status ke payment status
                 $paymentStatusMap = [
-                    'pending' => 'pending',
+                    'unpaid' => 'pending',
                     'verifying' => 'pending', // masih pending di tabel payment
-                    'paid' => 'verified',
-                    'cancelled' => 'rejected'
+                    'paid' => 'verified'
                 ];
 
                 $order->payment->status = $paymentStatusMap[$request->payment_status];
@@ -213,7 +248,7 @@ class OrderController extends Controller
         }
     }
 
-    public function tukangOrderIndex()
+    public function tukangOrderIndex(Request $request)
     {
         // Ambil profil tukang dari user yang login
         $tukangProfile = Auth::user()->tukangProfile;
@@ -232,10 +267,26 @@ class OrderController extends Controller
             ->pluck('order_id')
             ->toArray();
 
-        // Ambil pesanan berdasarkan ID yang sudah difilter
-        $orders = Order::whereIn('id', $orderIds)
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        // Query dasar untuk pesanan berdasarkan ID yang sudah difilter
+        $query = Order::whereIn('id', $orderIds);
+
+        // Filter by search (order number, customer name, customer phone)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                    ->orWhere('customer_name', 'like', "%{$search}%")
+                    ->orWhere('customer_phone', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Ambil pesanan dengan pagination
+        $orders = $query->orderBy('created_at', 'desc')->paginate(10);
 
         return view('tukang.orders.index', compact('orders'));
     }
@@ -365,12 +416,14 @@ class OrderController extends Controller
 
             // Update order status to cancelled
             $order->status = 'cancelled';
-            $order->payment_status = 'cancelled';
+            // Set payment_status to 'unpaid' instead of 'cancelled' since 'cancelled' is not in enum
+            $order->payment_status = 'unpaid';
             $order->save();
 
             // Update payment if exists
             if ($order->payment) {
-                $order->payment->status = 'cancelled';
+                // Use 'rejected' as it's available in payments table enum ['pending', 'verified', 'rejected']
+                $order->payment->status = 'rejected';
                 $order->payment->save();
             }
 

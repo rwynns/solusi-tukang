@@ -3,6 +3,40 @@
 @section('title', 'Pilih Metode Pembayaran')
 
 @section('content')
+    @if (!isset($cart) || count($cart) == 0)
+        <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">Keranjang Kosong</h3>
+                    <div class="mt-2 text-sm text-red-700">
+                        <p>Keranjang belanja Anda kosong. Silakan kembali ke halaman utama untuk memilih layanan.</p>
+                    </div>
+                    <div class="mt-4">
+                        <a href="{{ route('home') }}"
+                            class="bg-red-100 text-red-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-200">
+                            Kembali ke Beranda
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Redirect after 3 seconds if user doesn't click
+            setTimeout(function() {
+                window.location.href = "{{ route('home') }}";
+            }, 3000);
+        </script>
+    @endif
+
     <div class="bg-gray-50 py-32">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="max-w-4xl mx-auto">
@@ -77,22 +111,45 @@
                             @csrf
 
                             <div class="space-y-6">
-                                <!-- Ringkasan Pesanan (tetap sama) -->
+                                <!-- Ringkasan Pesanan -->
                                 <div class="bg-gray-50 p-4 rounded-lg">
                                     <h3 class="text-lg font-medium text-gray-900 mb-3">Ringkasan Pesanan</h3>
 
-                                    @php
-                                        $cart = json_decode(request()->cookie('cart'), true) ?? [];
-                                        $total = collect($cart)->sum(function ($item) {
-                                            return $item['price'] * $item['quantity'];
-                                        });
-                                    @endphp
+                                    @if (isset($cart) && count($cart) > 0)
+                                        <!-- Items List -->
+                                        <div class="space-y-3 mb-4">
+                                            @foreach ($cart as $item)
+                                                <div class="flex justify-between items-center text-sm">
+                                                    <div class="flex-1">
+                                                        <p class="font-medium text-gray-900">
+                                                            {{ $item['name'] ?? 'Layanan' }}</p>
+                                                        <p class="text-gray-500">
+                                                            {{ $item['quantity'] ?? 1 }} {{ $item['satuan'] ?? 'pcs' }} ×
+                                                            Rp {{ number_format($item['price'] ?? 0, 0, ',', '.') }}
+                                                        </p>
+                                                    </div>
+                                                    <div class="font-medium text-gray-900">
+                                                        Rp
+                                                        {{ number_format(($item['price'] ?? 0) * ($item['quantity'] ?? 1), 0, ',', '.') }}
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
 
-                                    <div class="mt-2 flex justify-between text-sm text-gray-500">
-                                        <span>Total Layanan ({{ count($cart) }} item)</span>
-                                        <span class="font-medium text-gray-900">Rp
-                                            {{ number_format($total, 0, ',', '.') }}</span>
-                                    </div>
+                                        <div class="border-t border-gray-200 pt-3">
+                                            <div class="flex justify-between text-base font-medium text-gray-900">
+                                                <span>Total Layanan ({{ count($cart) }}
+                                                    item{{ count($cart) > 1 ? 's' : '' }})</span>
+                                                <span>Rp {{ number_format($total ?? 0, 0, ',', '.') }}</span>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div class="text-center py-4">
+                                            <p class="text-gray-500">Keranjang kosong</p>
+                                            <a href="{{ route('home') }}" class="text-[#332E60] hover:underline">Mulai
+                                                berbelanja</a>
+                                        </div>
+                                    @endif
                                 </div>
 
                                 <!-- Opsi Pembayaran -->
@@ -217,7 +274,7 @@
                                                 <ul class="list-disc pl-5 space-y-1">
                                                     <li>Mohon lakukan pembayaran sesuai dengan total yang tertera</li>
                                                     <li>Sertakan nomor pesanan
-                                                        <strong>{{ session('temp_order_number', 'xxxxx') }}</strong> pada
+                                                        <strong>{{ $tempOrderNumber ?? 'xxxxx' }}</strong> pada
                                                         keterangan transfer
                                                     </li>
                                                 </ul>

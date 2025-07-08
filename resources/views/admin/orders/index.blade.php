@@ -3,6 +3,19 @@
 @section('title', 'Kelola Pemesanan')
 
 @section('content')
+    <!-- Success/Error Messages -->
+    @if (session('success'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline">{{ session('success') }}</span>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline">{{ session('error') }}</span>
+        </div>
+    @endif
+
     <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-gray-50">
         <!-- Filter & Search -->
         <div class="bg-white px-4 py-3 shadow rounded-lg mb-6">
@@ -21,7 +34,7 @@
                         </div>
                         <input type="text" name="search" id="search" value="{{ request('search') }}"
                             class="focus:ring-[#F4C542] focus:border-[#F4C542] block w-full h-10 pl-10 sm:text-sm border-gray-300 rounded-md font-roboto"
-                            placeholder="Cari order number, nama, atau no. telepon...">
+                            placeholder="Cari order number, nama, telepon, atau email...">
                     </div>
                 </div>
 
@@ -47,13 +60,11 @@
                     <select id="payment_status" name="payment_status"
                         class="block w-full h-10 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#F4C542] focus:border-[#F4C542] sm:text-sm rounded-md font-roboto">
                         <option value="">Semua Status Pembayaran</option>
-                        <option value="pending" {{ request('payment_status') == 'pending' ? 'selected' : '' }}>Pending
+                        <option value="unpaid" {{ request('payment_status') == 'unpaid' ? 'selected' : '' }}>Belum Dibayar
                         </option>
                         <option value="verifying" {{ request('payment_status') == 'verifying' ? 'selected' : '' }}>Menunggu
                             Verifikasi</option>
-                        <option value="paid" {{ request('payment_status') == 'paid' ? 'selected' : '' }}>Paid</option>
-                        <option value="cancelled" {{ request('payment_status') == 'cancelled' ? 'selected' : '' }}>Cancelled
-                        </option>
+                        <option value="paid" {{ request('payment_status') == 'paid' ? 'selected' : '' }}>Lunas</option>
                     </select>
                 </div>
 
@@ -163,14 +174,20 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span
                                         class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                        {{ $order->payment_status === 'pending'
+                                        {{ $order->payment_status === 'unpaid'
                                             ? 'bg-yellow-100 text-yellow-800'
                                             : ($order->payment_status === 'verifying'
                                                 ? 'bg-blue-100 text-blue-800'
                                                 : ($order->payment_status === 'paid'
                                                     ? 'bg-green-100 text-green-800'
                                                     : 'bg-red-100 text-red-800')) }}">
-                                        {{ $order->payment_status === 'verifying' ? 'Menunggu Verifikasi' : ucfirst($order->payment_status) }}
+                                        {{ $order->payment_status === 'unpaid'
+                                            ? 'Belum Dibayar'
+                                            : ($order->payment_status === 'verifying'
+                                                ? 'Menunggu Verifikasi'
+                                                : ($order->payment_status === 'paid'
+                                                    ? 'Lunas'
+                                                    : ucfirst($order->payment_status))) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -234,229 +251,238 @@
     </main>
 
     <!-- Status Update Modal -->
-    <div id="statusUpdateModal" class="fixed inset-0 z-50 flex items-center justify-center hidden"
-        aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="relative bg-white rounded-lg shadow-2xl max-w-lg w-full transform transition-all">
-            <form id="statusUpdateForm" method="POST">
-                @csrf
-                @method('PATCH')
-                <!-- Tombol X di pojok kanan atas -->
-                <button type="button" id="closeStatusModal"
-                    class="absolute top-3 right-3 text-gray-400 hover:text-gray-500">
-                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    <span class="sr-only">Close</span>
-                </button>
+    <div id="statusUpdateModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog"
+        aria-modal="true">
+        <div class="fixed inset-0 bg-gray-500/40 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
 
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div class="sm:flex sm:items-start">
-                        <div
-                            class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
-                            <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div
+                    class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                    <form id="statusUpdateForm" method="POST">
+                        @csrf
+                        @method('PATCH')
+                        <!-- Tombol X di pojok kanan atas -->
+                        <button type="button" id="closeStatusModal"
+                            class="absolute top-3 right-3 text-gray-400 hover:text-gray-500 z-10">
+                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    d="M6 18L18 6M6 6l12 12" />
                             </svg>
-                        </div>
-                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                                Perbarui Status Pesanan
-                            </h3>
-                            <div class="mt-2">
-                                <p class="text-sm text-gray-500">
-                                    Pilih status baru untuk pesanan ini:
-                                </p>
-                                <select name="status" id="statusSelect"
-                                    class="mt-3 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#F4C542] focus:border-[#F4C542] sm:text-sm rounded-md">
-                                    <option value="pending">Pending</option>
-                                    <option value="processing">Processing</option>
-                                    <option value="completed">Completed</option>
-                                    <option value="cancelled">Cancelled</option>
-                                </select>
+                            <span class="sr-only">Close</span>
+                        </button>
+
+                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                            <div class="sm:flex sm:items-start">
+                                <div
+                                    class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                                    <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                </div>
+                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                        Perbarui Status Pesanan
+                                    </h3>
+                                    <div class="mt-2">
+                                        <p class="text-sm text-gray-500">
+                                            Pilih status baru untuk pesanan ini:
+                                        </p>
+                                        <select name="status" id="statusSelect"
+                                            class="mt-3 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#F4C542] focus:border-[#F4C542] sm:text-sm rounded-md">
+                                            <option value="pending">Pending</option>
+                                            <option value="processing">Processing</option>
+                                            <option value="completed">Completed</option>
+                                            <option value="cancelled">Cancelled</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">
+                            <button type="submit"
+                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#332E60] text-base font-medium text-white hover:bg-[#292650] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F4C542] sm:ml-3 sm:w-auto sm:text-sm">
+                                Update
+                            </button>
+                            <button type="button"
+                                class="close-modal mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F4C542] sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                                Batal
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">
-                    <button type="submit"
-                        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#332E60] text-base font-medium text-white hover:bg-[#292650] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F4C542] sm:ml-3 sm:w-auto sm:text-sm">
-                        Update
-                    </button>
-                    <button type="button"
-                        class="close-modal mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F4C542] sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                        Batal
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 
     <!-- Payment Status Update Modal -->
-    <div id="paymentUpdateModal" class="fixed inset-0 z-50 flex items-center justify-center hidden"
-        aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="relative bg-white rounded-lg shadow-2xl max-w-lg w-full transform transition-all">
-            <form id="paymentUpdateForm" method="POST">
-                @csrf
-                @method('PATCH')
-                <!-- Tombol X di pojok kanan atas -->
-                <button type="button" id="closePaymentModal"
-                    class="absolute top-3 right-3 text-gray-400 hover:text-gray-500">
-                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    <span class="sr-only">Close</span>
-                </button>
+    <div id="paymentUpdateModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog"
+        aria-modal="true">
+        <div class="fixed inset-0 bg-gray-500/40 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
 
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div class="sm:flex sm:items-start">
-                        <div
-                            class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
-                            <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div
+                    class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                    <form id="paymentUpdateForm" method="POST">
+                        @csrf
+                        @method('PATCH')
+                        <!-- Tombol X di pojok kanan atas -->
+                        <button type="button" id="closePaymentModal"
+                            class="absolute top-3 right-3 text-gray-400 hover:text-gray-500 z-10">
+                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    d="M6 18L18 6M6 6l12 12" />
                             </svg>
-                        </div>
-                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                                Perbarui Status Pembayaran
-                            </h3>
-                            <div class="mt-2">
-                                <p class="text-sm text-gray-500">
-                                    Pilih status pembayaran baru untuk pesanan ini:
-                                </p>
-                                <select name="payment_status" id="paymentStatusSelect"
-                                    class="mt-3 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#F4C542] focus:border-[#F4C542] sm:text-sm rounded-md">
-                                    <option value="pending">Pending</option>
-                                    <option value="verifying">Menunggu Verifikasi</option>
-                                    <option value="paid">Paid</option>
-                                    <option value="cancelled">Cancelled</option>
-                                </select>
+                            <span class="sr-only">Close</span>
+                        </button>
+
+                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                            <div class="sm:flex sm:items-start">
+                                <div
+                                    class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+                                    <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                        Perbarui Status Pembayaran
+                                    </h3>
+                                    <div class="mt-2">
+                                        <p class="text-sm text-gray-500">
+                                            Pilih status pembayaran baru untuk pesanan ini:
+                                        </p>
+                                        <select name="payment_status" id="paymentStatusSelect"
+                                            class="mt-3 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#F4C542] focus:border-[#F4C542] sm:text-sm rounded-md">
+                                            <option value="unpaid">Belum Dibayar</option>
+                                            <option value="verifying">Menunggu Verifikasi</option>
+                                            <option value="paid">Lunas</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                            <button type="submit"
+                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm">
+                                Update
+                            </button>
+                            <button type="button"
+                                class="close-payment-modal mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F4C542] sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                                Batal
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button type="submit"
-                        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm">
-                        Update
-                    </button>
-                    <button type="button"
-                        class="close-payment-modal mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F4C542] sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                        Batal
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
+    </div>
+    </form>
+    </div>
+    </div>
     </div>
 @endsection
 
 @section('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Status Update Modal
-            const statusUpdateButtons = document.querySelectorAll('.status-update-btn');
+            // Handle filter form submission
+            const filterForm = document.querySelector('form[action="{{ route('admin.orders.index') }}"]');
+            if (filterForm) {
+                filterForm.addEventListener('submit', function(e) {
+                    // Remove empty inputs before submitting
+                    const inputs = this.querySelectorAll('input, select');
+                    inputs.forEach(input => {
+                        if (!input.value || input.value.trim() === '') {
+                            input.removeAttribute('name');
+                        }
+                    });
+                });
+            }
+
+            // Modal Elements
             const statusUpdateModal = document.getElementById('statusUpdateModal');
             const statusUpdateForm = document.getElementById('statusUpdateForm');
             const statusSelect = document.getElementById('statusSelect');
-            const closeStatusModal = document.getElementById('closeStatusModal');
-            const closeModalButtons = document.querySelectorAll('.close-modal');
 
-            // Tombol update status
-            if (statusUpdateButtons && statusUpdateModal && statusUpdateForm && statusSelect) {
-                statusUpdateButtons.forEach(button => {
-                    button.addEventListener('click', function() {
-                        const orderId = this.getAttribute('data-id');
-                        const currentStatus = this.getAttribute('data-status');
-
-                        // Set current status in select
-                        statusSelect.value = currentStatus;
-
-                        // Set form action
-                        statusUpdateForm.action = `/admin/orders/${orderId}/status`;
-
-                        // Show modal
-                        statusUpdateModal.classList.remove('hidden');
-                    });
-                });
-            }
-
-            // Payment Status Update Modal
-            const paymentUpdateButtons = document.querySelectorAll('.payment-update-btn');
             const paymentUpdateModal = document.getElementById('paymentUpdateModal');
             const paymentUpdateForm = document.getElementById('paymentUpdateForm');
             const paymentStatusSelect = document.getElementById('paymentStatusSelect');
-            const closePaymentModal = document.getElementById('closePaymentModal');
-            const closePaymentModalButtons = document.querySelectorAll('.close-payment-modal');
 
-            // Tambahkan console.log untuk debugging
-            console.log('Payment Elements:', {
-                buttons: paymentUpdateButtons.length,
-                modal: !!paymentUpdateModal,
-                form: !!paymentUpdateForm,
-                select: !!paymentStatusSelect,
-                closeButton: !!closePaymentModal
-            });
-
-            // Tombol update payment status
-            if (paymentUpdateButtons && paymentUpdateModal && paymentUpdateForm && paymentStatusSelect) {
-                paymentUpdateButtons.forEach(button => {
-                    button.addEventListener('click', function() {
-                        const orderId = this.getAttribute('data-id');
-                        const currentPaymentStatus = this.getAttribute('data-payment-status');
-
-                        console.log('Payment Update:', {
-                            orderId,
-                            currentPaymentStatus
-                        });
-
-                        // Set current status in select
-                        paymentStatusSelect.value = currentPaymentStatus;
-
-                        // Set form action - PASTIKAN URL INI BENAR
-                        paymentUpdateForm.action = `/admin/orders/${orderId}/payment-status`;
-
-                        console.log('Form action set to:', paymentUpdateForm.action);
-
-                        // Show modal
-                        paymentUpdateModal.classList.remove('hidden');
-                    });
-                });
-            }
-
-            // Handle close events
-
-            // Close dengan tombol X dan tombol Batal
-            if (closeStatusModal) {
-                closeStatusModal.addEventListener('click', function() {
-                    statusUpdateModal.classList.add('hidden');
-                });
-            }
-
-            if (closePaymentModal) {
-                closePaymentModal.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    console.log('Close payment modal button clicked');
-                    paymentUpdateModal.classList.add('hidden');
-                });
-            }
-
-            // Juga menggunakan class close-modal untuk menutup modal
-            closeModalButtons.forEach(button => {
+            // Show Status Update Modal
+            document.querySelectorAll('.status-update-btn').forEach(button => {
                 button.addEventListener('click', function() {
-                    statusUpdateModal.classList.add('hidden');
-                    paymentUpdateModal.classList.add('hidden');
+                    const orderId = this.getAttribute('data-id');
+                    const currentStatus = this.getAttribute('data-status');
+
+                    statusSelect.value = currentStatus;
+                    statusUpdateForm.action = `/admin/orders/${orderId}/status`;
+
+                    statusUpdateModal.classList.remove('hidden');
                 });
             });
 
-            // Close dengan ESC key
+            // Show Payment Update Modal
+            document.querySelectorAll('.payment-update-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const orderId = this.getAttribute('data-id');
+                    const currentPaymentStatus = this.getAttribute('data-payment-status');
+
+                    paymentStatusSelect.value = currentPaymentStatus;
+                    paymentUpdateForm.action = `/admin/orders/${orderId}/update-payment`;
+
+                    paymentUpdateModal.classList.remove('hidden');
+                });
+            });
+
+            // Close Status Modal
+            function closeStatusModal() {
+                statusUpdateModal.classList.add('hidden');
+            }
+
+            // Close Payment Modal
+            function closePaymentModal() {
+                paymentUpdateModal.classList.add('hidden');
+            }
+
+            // Event listeners for closing modals
+            document.getElementById('closeStatusModal').addEventListener('click', closeStatusModal);
+            document.getElementById('closePaymentModal').addEventListener('click', closePaymentModal);
+
+            // Close with buttons
+            document.querySelectorAll('.close-modal').forEach(button => {
+                button.addEventListener('click', closeStatusModal);
+            });
+
+            document.querySelectorAll('.close-payment-modal').forEach(button => {
+                button.addEventListener('click', closePaymentModal);
+            });
+
+            // Close with backdrop click
+            statusUpdateModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeStatusModal();
+                }
+            });
+
+            paymentUpdateModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closePaymentModal();
+                }
+            });
+
+            // Close with ESC key
             document.addEventListener('keydown', function(event) {
                 if (event.key === 'Escape') {
-                    statusUpdateModal.classList.add('hidden');
-                    paymentUpdateModal.classList.add('hidden');
+                    closeStatusModal();
+                    closePaymentModal();
                 }
             });
         });
@@ -464,14 +490,10 @@
         // Export function
         function exportOrders(event) {
             event.preventDefault();
-
-            // Get current filter parameters
             const urlParams = new URLSearchParams(window.location.search);
             const status = urlParams.get('status') || '';
             const paymentStatus = urlParams.get('payment_status') || '';
             const search = urlParams.get('search') || '';
-
-            // Redirect to export URL with same filters
             window.location.href = `/admin/orders/export?status=${status}&payment_status=${paymentStatus}&search=${search}`;
         }
     </script>
