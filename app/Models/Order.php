@@ -24,7 +24,18 @@ class Order extends Model
         'customer_name',
         'customer_phone',
         'customer_address',
-        'notes'
+        'notes',
+        'customer_confirmed',
+        'tukang_confirmed',
+        'customer_confirmed_at',
+        'tukang_confirmed_at'
+    ];
+
+    protected $casts = [
+        'customer_confirmed' => 'boolean',
+        'tukang_confirmed' => 'boolean',
+        'customer_confirmed_at' => 'datetime',
+        'tukang_confirmed_at' => 'datetime',
     ];
 
     /**
@@ -111,4 +122,58 @@ class Order extends Model
     const PAYMENT_STATUS_UNPAID = 'unpaid';
     const PAYMENT_STATUS_VERIFYING = 'verifying';
     const PAYMENT_STATUS_PAID = 'paid';
+
+    // Variabel untuk status pesanan
+    const STATUS_PENDING = 'pending';
+    const STATUS_PROCESSING = 'processing';
+    const STATUS_COMPLETED = 'completed';
+    const STATUS_CANCELLED = 'cancelled';
+
+    /**
+     * Check if both customer and tukang have confirmed completion
+     */
+    public function isBothConfirmed(): bool
+    {
+        return $this->customer_confirmed && $this->tukang_confirmed;
+    }
+
+    /**
+     * Check if order can be marked as completed
+     */
+    public function canBeCompleted(): bool
+    {
+        return $this->payment_status === self::PAYMENT_STATUS_PAID &&
+            $this->status === self::STATUS_PROCESSING &&
+            $this->isBothConfirmed();
+    }
+
+    /**
+     * Mark customer as confirmed
+     */
+    public function confirmByCustomer(): void
+    {
+        $this->update([
+            'customer_confirmed' => true,
+            'customer_confirmed_at' => now()
+        ]);
+
+        if ($this->canBeCompleted()) {
+            $this->update(['status' => self::STATUS_COMPLETED]);
+        }
+    }
+
+    /**
+     * Mark tukang as confirmed
+     */
+    public function confirmByTukang(): void
+    {
+        $this->update([
+            'tukang_confirmed' => true,
+            'tukang_confirmed_at' => now()
+        ]);
+
+        if ($this->canBeCompleted()) {
+            $this->update(['status' => self::STATUS_COMPLETED]);
+        }
+    }
 }

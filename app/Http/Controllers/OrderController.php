@@ -437,4 +437,87 @@ class OrderController extends Controller
                 ->with('error', 'Gagal membatalkan pesanan: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Customer confirms order completion
+     */
+    public function customerConfirmCompletion(Order $order)
+    {
+        // Ensure user can only confirm their own orders
+        if ($order->user_id !== Auth::id()) {
+            abort(403, 'Anda tidak memiliki akses ke pesanan ini');
+        }
+
+        // Check if order is in processing status and payment is verified
+        if ($order->status !== 'processing' || $order->payment_status !== 'paid') {
+            return redirect()->back()->with('error', 'Pesanan ini belum dapat dikonfirmasi selesai.');
+        }
+
+        // Check if customer already confirmed
+        if ($order->customer_confirmed) {
+            return redirect()->back()->with('info', 'Anda sudah mengkonfirmasi penyelesaian pesanan ini.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $order->confirmByCustomer();
+
+            DB::commit();
+
+            $message = $order->status === 'completed'
+                ? 'Pesanan #' . $order->order_number . ' telah selesai dikerjakan!'
+                : 'Konfirmasi Anda telah diterima. Menunggu konfirmasi dari tukang.';
+
+            return redirect()->back()->with('success', $message);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return redirect()->back()->with('error', 'Gagal mengkonfirmasi pesanan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Tukang confirms order completion
+     */
+    public function tukangConfirmCompletion(Order $order)
+    {
+        $user = Auth::user();
+
+        // Check if user is tukang and assigned to this order
+        $isAssignedTukang = $order->items()
+            ->whereHas('tukangProfile', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })->exists();
+
+        if (!$isAssignedTukang && $user->role_id !== 1) { // Allow admin for testing
+            abort(403, 'Anda tidak memiliki akses ke pesanan ini');
+        }
+
+        // Check if order is in processing status and payment is verified
+        if ($order->status !== 'processing' || $order->payment_status !== 'paid') {
+            return redirect()->back()->with('error', 'Pesanan ini belum dapat dikonfirmasi selesai.');
+        }
+
+        // Check if tukang already confirmed
+        if ($order->tukang_confirmed) {
+            return redirect()->back()->with('info', 'Anda sudah mengkonfirmasi penyelesaian pesanan ini.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $order->confirmByTukang();
+
+            DB::commit();
+
+            $message = $order->status === 'completed'
+                ? 'Pesanan #' . $order->order_number . ' telah selesai dikerjakan!'
+                : 'Konfirmasi Anda telah diterima. Menunggu konfirmasi dari customer.';
+
+            return redirect()->back()->with('success', $message);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return redirect()->back()->with('error', 'Gagal mengkonfirmasi pesanan: ' . $e->getMessage());
+        }
+    }
 }

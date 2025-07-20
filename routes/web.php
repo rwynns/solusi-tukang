@@ -30,7 +30,34 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/jasa/{jasa}', [HomeController::class, 'jasaDetail'])->name('jasa.detail');
 Route::get('/api/sub-jasa/{subJasa}', [HomeController::class, 'getSubJasaDetail']);
 
-// Test route for cart functionality
+// Test routes for confirmation system
+Route::get('/test-order-confirmation', function () {
+    $orders = \App\Models\Order::where('status', 'processing')
+        ->where('payment_status', 'paid')
+        ->get();
+
+    return view('test-confirmation', ['orders' => $orders]);
+})->name('test.confirmation');
+
+Route::get('/test-earning-timing', function () {
+    $completedOrders = \App\Models\Order::where('status', 'completed')
+        ->with('earningSplit')
+        ->orderBy('updated_at', 'desc')
+        ->take(10)
+        ->get();
+
+    $processingOrders = \App\Models\Order::where('status', 'processing')
+        ->where('payment_status', 'paid')
+        ->with('earningSplit')
+        ->orderBy('updated_at', 'desc')
+        ->take(10)
+        ->get();
+
+    return view('test-earning-timing', [
+        'completedOrders' => $completedOrders,
+        'processingOrders' => $processingOrders
+    ]);
+})->name('test.earning.timing'); // Test route for cart functionality
 Route::get('/test-cart', function () {
     return view('test-cart');
 })->name('test.cart');
@@ -91,6 +118,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/customer/orders', [OrderController::class, 'customerIndex'])->name('customer.orders.index');
     Route::get('/customer/orders/{order}', [OrderController::class, 'customerShow'])->name('customer.orders.show');
     Route::post('/customer/orders/{order}/cancel', [OrderController::class, 'customerCancel'])->name('customer.orders.cancel');
+    Route::post('/customer/orders/{order}/confirm-completion', [OrderController::class, 'customerConfirmCompletion'])->name('customer.orders.confirm-completion');
 
     // Customer Ulasan Routes
     Route::post('/customer/orders/{order}/ulasan', [UlasanController::class, 'store'])->name('customer.ulasan.store');
@@ -145,8 +173,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/pesanan-saya', [OrderController::class, 'tukangOrderIndex'])->name('tukang.pesanan.index');
         Route::get('/pesanan-saya/{order}', [OrderController::class, 'tukangOrderShow'])->name('tukang.pesanan.show');
         Route::post('/pesanan-saya/{order}/complete', [OrderController::class, 'tukangOrderComplete'])->name('tukang.pesanan.complete');
+        Route::post('/pesanan-saya/{order}/confirm-completion', [OrderController::class, 'tukangConfirmCompletion'])->name('tukang.pesanan.confirm-completion');
         Route::get('/orders', [OrderController::class, 'tukangOrderIndex'])->name('orders.index');
         Route::get('/orders/{order}', [OrderController::class, 'tukangOrderShow'])->name('orders.show');
+        Route::post('/orders/{order}/confirm-completion', [OrderController::class, 'tukangConfirmCompletion'])->name('orders.confirm-completion');
 
         // Penghasilan Tukang
         Route::get('/penghasilan', [EarningsController::class, 'index'])->name('tukang.earnings.index');

@@ -38,18 +38,38 @@
                             <p class="mt-1 max-w-2xl text-sm text-gray-500">Tanggal Pemesanan:
                                 {{ $order->created_at->format('d M Y, H:i') }}</p>
                         </div>
-                        @if ($order->status === 'processing')
+                        @if ($order->status === 'processing' && $order->payment_status === 'paid')
                             <div>
-                                <button type="button" id="completeOrderBtn"
-                                    class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="-ml-0.5 mr-2 h-4 w-4" viewBox="0 0 20 20"
-                                        fill="currentColor">
-                                        <path fill-rule="evenodd"
-                                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                            clip-rule="evenodd" />
-                                    </svg>
-                                    Tandai Selesai
-                                </button>
+                                @if (!$order->tukang_confirmed)
+                                    <form action="{{ route('tukang.pesanan.confirm-completion', $order) }}" method="POST"
+                                        id="confirmCompletionForm">
+                                        @csrf
+                                        <button type="button" onclick="confirmCompletion()"
+                                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="-ml-0.5 mr-2 h-4 w-4"
+                                                viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd"
+                                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                                    clip-rule="evenodd" />
+                                            </svg>
+                                            Konfirmasi Selesai
+                                        </button>
+                                    </form>
+                                @else
+                                    <div
+                                        class="inline-flex items-center px-3 py-2 text-sm leading-4 font-medium rounded-md text-green-700 bg-green-100 border border-green-200">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="-ml-0.5 mr-2 h-4 w-4"
+                                            viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd"
+                                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                                clip-rule="evenodd" />
+                                        </svg>
+                                        Anda sudah konfirmasi selesai
+                                        @if (!$order->customer_confirmed)
+                                            <span class="ml-2 text-xs">(Menunggu customer)</span>
+                                        @endif
+                                    </div>
+                                @endif
                             </div>
                         @endif
                     </div>
@@ -88,6 +108,56 @@
                                 </dd>
                             </div>
                         </div>
+
+                        @if ($order->status === 'processing' && $order->payment_status === 'paid')
+                            <div class="bg-blue-50 px-4 py-5 sm:grid sm:grid-cols-2 sm:gap-4 sm:px-6">
+                                <div class="sm:col-span-2">
+                                    <dt class="text-sm font-medium text-gray-500 mb-2">Status Konfirmasi Penyelesaian</dt>
+                                    <dd class="mt-1 grid grid-cols-1 gap-2">
+                                        <div class="flex items-center">
+                                            @if ($order->customer_confirmed)
+                                                <svg class="h-5 w-5 text-green-500 mr-2" fill="currentColor"
+                                                    viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd"
+                                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                        clip-rule="evenodd" />
+                                                </svg>
+                                                <span class="text-sm text-green-700 font-medium">Customer sudah konfirmasi
+                                                    selesai</span>
+                                            @else
+                                                <svg class="h-5 w-5 text-gray-400 mr-2" fill="currentColor"
+                                                    viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd"
+                                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 001.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                                        clip-rule="evenodd" />
+                                                </svg>
+                                                <span class="text-sm text-gray-500">Customer belum konfirmasi selesai</span>
+                                            @endif
+                                        </div>
+                                        <div class="flex items-center">
+                                            @if ($order->tukang_confirmed)
+                                                <svg class="h-5 w-5 text-green-500 mr-2" fill="currentColor"
+                                                    viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd"
+                                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                        clip-rule="evenodd" />
+                                                </svg>
+                                                <span class="text-sm text-green-700 font-medium">Anda sudah konfirmasi
+                                                    selesai</span>
+                                            @else
+                                                <svg class="h-5 w-5 text-gray-400 mr-2" fill="currentColor"
+                                                    viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd"
+                                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 001.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                                        clip-rule="evenodd" />
+                                                </svg>
+                                                <span class="text-sm text-gray-500">Anda belum konfirmasi selesai</span>
+                                            @endif
+                                        </div>
+                                    </dd>
+                                </div>
+                            </div>
+                        @endif
 
                         <div class="px-4 py-5 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500 mb-1">Alamat Pengerjaan</dt>
@@ -228,77 +298,25 @@
         </div>
     </main>
 
-    <!-- Modal untuk konfirmasi menyelesaikan order -->
-    <div id="completeOrderModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="mt-3 text-center">
-                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none"
-                        viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                </div>
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mt-2">Menyelesaikan Pesanan</h3>
-                <div class="mt-2 px-7 py-3">
-                    <p class="text-sm text-gray-500">
-                        Apakah Anda yakin ingin menandai pesanan ini sebagai selesai? Tindakan ini tidak dapat dibatalkan.
-                    </p>
-                    <div class="mt-4">
-                        <label for="completion_notes"
-                            class="block text-sm font-medium text-left text-gray-700 mb-1">Catatan Penyelesaian
-                            (Opsional)</label>
-                        <textarea id="completion_notes" name="completion_notes" rows="3"
-                            class="shadow-sm focus:ring-[#332E60] focus:border-[#332E60] mt-1 block w-full sm:text-sm border border-gray-300 rounded-md p-2"></textarea>
-                    </div>
-                </div>
-                <div class="flex justify-between px-4 py-3">
-                    <button id="cancelCompleteBtn" type="button"
-                        class="bg-gray-200 px-4 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-300 focus:outline-none">
-                        Batal
-                    </button>
-                    <form id="completeOrderForm" action="{{ route('tukang.pesanan.complete', $order->id) }}"
-                        method="POST">
-                        @csrf
-                        <input type="hidden" name="completion_notes" id="form_completion_notes">
-                        <button type="submit"
-                            class="bg-green-600 px-4 py-2 rounded-md text-sm font-medium text-white hover:bg-green-700 focus:outline-none">
-                            Konfirmasi
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
 @endsection
 
 @section('scripts')
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const completeOrderBtn = document.getElementById('completeOrderBtn');
-            const completeOrderModal = document.getElementById('completeOrderModal');
-            const cancelCompleteBtn = document.getElementById('cancelCompleteBtn');
-            const completionNotes = document.getElementById('completion_notes');
-            const formCompletionNotes = document.getElementById('form_completion_notes');
-
-            if (completeOrderBtn) {
-                completeOrderBtn.addEventListener('click', function() {
-                    completeOrderModal.classList.remove('hidden');
-                });
-            }
-
-            if (cancelCompleteBtn) {
-                cancelCompleteBtn.addEventListener('click', function() {
-                    completeOrderModal.classList.add('hidden');
-                    completionNotes.value = '';
-                });
-            }
-
-            const completeOrderForm = document.getElementById('completeOrderForm');
-            if (completeOrderForm) {
-                completeOrderForm.addEventListener('submit', function() {
-                    formCompletionNotes.value = completionNotes.value;
-                });
-            }
-        });
+        function confirmCompletion() {
+            Swal.fire({
+                title: 'Konfirmasi Penyelesaian',
+                text: "Apakah Anda yakin pekerjaan sudah selesai dikerjakan?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Ya, sudah selesai!',
+                cancelButtonText: 'Belum'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('confirmCompletionForm').submit();
+                }
+            })
+        }
     </script>
 @endsection

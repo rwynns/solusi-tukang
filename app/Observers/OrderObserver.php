@@ -27,17 +27,27 @@ class OrderObserver
         // Log semua perubahan untuk debugging
         Log::info("Order updated", [
             'order_id' => $order->id,
+            'status' => $order->status,
             'payment_status' => $order->payment_status,
             'dirty_fields' => $order->getDirty()
         ]);
 
-        // Hanya proses jika payment_status berubah menjadi 'paid'
+        // Update status pesanan menjadi 'processing' ketika payment sudah 'paid'
         if ($order->isDirty('payment_status') && $order->payment_status === 'paid') {
-            Log::info("Processing payment distribution for order {$order->id}");
+            Log::info("Payment verified for order {$order->id}");
+
+            if ($order->status === 'pending') {
+                $order->update(['status' => 'processing']);
+                Log::info("Order status updated to 'processing' for order {$order->id}");
+            }
+        }
+
+        // Proses pembagian pendapatan ketika status berubah menjadi 'completed'
+        if ($order->isDirty('status') && $order->status === 'completed') {
+            Log::info("Processing payment distribution for completed order {$order->id}");
             $this->processPaymentDistribution($order);
         }
     }
-
     /**
      * Handle the Order "deleted" event.
      */
@@ -63,12 +73,19 @@ class OrderObserver
     }
 
     /**
-     * Process payment distribution when order is marked as paid
+     * Process payment distribution when order is completed
      */
     private function processPaymentDistribution(Order $order)
     {
         try {
             DB::beginTransaction();
+
+            // Pastikan payment sudah lunas sebelum membagi hasil
+            if ($order->payment_status !== 'paid') {
+                Log::warning("Cannot distribute payment for order {$order->id}: payment not yet verified");
+                DB::rollback();
+                return;
+            }
 
             // Cek apakah earning split sudah pernah dibuat untuk order ini
             $existingSplit = EarningSplit::where('order_id', $order->id)->exists();
@@ -120,7 +137,7 @@ class OrderObserver
                     'admin_percentage' => $adminPercentage,
                     'status' => 'distributed',
                     'distributed_at' => now(),
-                    'notes' => "Otomatis dibuat saat pembayaran lunas untuk order #{$order->order_number} - Tukang: {$tukang->name}"
+                    'notes' => "Otomatis dibuat saat pesanan selesai untuk order #{$order->order_number} - Tukang: {$tukang->name}"
                 ]);
 
                 // Create balance transaction for this tukang
@@ -130,12 +147,13 @@ class OrderObserver
                     'order_id' => $order->id,
                     'tukang_id' => $tukang->id,
                     'amount' => $tukangAmount,
-                    'description' => "Pembagian hasil dari order #{$order->order_number} - {$tukang->name}",
+                    'description' => "Pendapatan dari order selesai #{$order->order_number} - {$tukang->name}",
                     'metadata' => [
                         'order_number' => $order->order_number,
                         'customer_name' => $order->customer_name,
                         'earning_split_id' => $earningSplit->id,
-                        'tukang_name' => $tukang->name
+                        'tukang_name' => $tukang->name,
+                        'completed_at' => now()->toISOString()
                     ]
                 ]);
 
@@ -147,10 +165,10 @@ class OrderObserver
 
             DB::commit();
 
-            Log::info("Payment distribution completed for order {$order->id}. Total admin amount: Rp{$totalAdminAmount}");
+            Log::info("Payment distribution completed for completed order {$order->id}. Total admin amount: Rp{$totalAdminAmount}");
         } catch (\Exception $e) {
             DB::rollback();
-            Log::error("Failed to process payment distribution for order {$order->id}: " . $e->getMessage());
+            Log::error("Failed to process payment distribution for completed order {$order->id}: " . $e->getMessage());
         }
     }
 
@@ -189,13 +207,14 @@ class OrderObserver
             'amount' => $adminAmount,
             'balance_before' => $currentBalance,
             'balance_after' => $currentBalance + $adminAmount,
-            'description' => "Bagian admin dari order #{$order->order_number}",
+            'description' => "Bagian admin dari order selesai #{$order->order_number}",
             'reference_type' => 'order',
             'reference_id' => $order->id,
             'metadata' => [
                 'order_number' => $order->order_number,
                 'customer_name' => $order->customer_name,
-                'admin_percentage' => 10
+                'admin_percentage' => 10,
+                'completed_at' => now()->toISOString()
             ]
         ]);
     }
