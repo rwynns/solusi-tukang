@@ -116,11 +116,6 @@
                                                         </div>
 
                                                         <div class="mt-3 flex items-center justify-between">
-                                                            <button type="button"
-                                                                class="text-xs text-[#332E60] hover:underline focus:outline-none"
-                                                                onclick="showTukangDetail('{{ $tukang->id }}', event)">
-                                                                Lihat Detail
-                                                            </button>
 
                                                             <div class="relative flex items-center">
                                                                 <input type="radio"
@@ -294,8 +289,8 @@
                                 ${data.skills && data.skills.length > 0 
                                     ? data.skills.map(skill => 
                                         `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                        ${skill.nama}
-                                                    </span>`
+                                                            ${skill.nama}
+                                                        </span>`
                                     ).join('') 
                                     : '<p class="text-sm text-gray-500">Tidak ada keahlian yang tercatat.</p>'
                                 }
