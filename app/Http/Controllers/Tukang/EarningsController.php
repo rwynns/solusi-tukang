@@ -22,7 +22,7 @@ class EarningsController extends Controller
 
         // Base query for this tukang's earnings
         $query = EarningSplit::where('tukang_id', $tukang->id)
-            ->with(['order', 'order.orderItems.subJasa']);
+            ->with(['order', 'order.orderItems.subJasa.jasa']);
 
         // Apply filters
         if ($dateFrom) {
@@ -88,7 +88,7 @@ class EarningsController extends Controller
         $tukang = Auth::user();
 
         $earning = EarningSplit::where('tukang_id', $tukang->id)
-            ->with(['order', 'order.orderItems.subJasa'])
+            ->with(['order', 'order.orderItems.subJasa.jasa'])
             ->findOrFail($id);
 
         return view('tukang.earnings.show', compact('earning'));

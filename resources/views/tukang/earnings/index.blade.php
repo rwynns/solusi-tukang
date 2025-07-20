@@ -226,7 +226,13 @@
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <div class="text-sm text-gray-900">
                                                     @if ($earning->order->orderItems->count() > 0)
-                                                        {{ $earning->order->orderItems->first()->subJasa->name ?? 'Layanan tidak ditemukan' }}
+                                                        @php
+                                                            $firstItem = $earning->order->orderItems->first();
+                                                            $serviceName =
+                                                                $firstItem->subJasa->nama ??
+                                                                ($firstItem->name ?? 'Layanan tidak ditemukan');
+                                                        @endphp
+                                                        {{ $serviceName }}
                                                         @if ($earning->order->orderItems->count() > 1)
                                                             <span
                                                                 class="text-gray-500">+{{ $earning->order->orderItems->count() - 1 }}

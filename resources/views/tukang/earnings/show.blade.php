@@ -96,11 +96,11 @@
                                                 <div class="flex justify-between items-start">
                                                     <div class="flex-1">
                                                         <h4 class="text-sm font-medium text-gray-900">
-                                                            {{ $item->subJasa->name ?? 'Layanan tidak ditemukan' }}
+                                                            {{ $item->subJasa->nama ?? ($item->name ?? 'Layanan tidak ditemukan') }}
                                                         </h4>
                                                         @if ($item->subJasa && $item->subJasa->jasa)
                                                             <p class="text-sm text-gray-500">
-                                                                {{ $item->subJasa->jasa->name }}</p>
+                                                                {{ $item->subJasa->jasa->nama }}</p>
                                                         @endif
                                                         <div class="mt-2 text-sm text-gray-600">
                                                             <p>Quantity: {{ $item->quantity }}</p>

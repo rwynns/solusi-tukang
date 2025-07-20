@@ -57,7 +57,29 @@ Route::get('/test-earning-timing', function () {
         'completedOrders' => $completedOrders,
         'processingOrders' => $processingOrders
     ]);
-})->name('test.earning.timing'); // Test route for cart functionality
+})->name('test.earning.timing');
+
+Route::get('/test-earning-data', function () {
+    $earning = \App\Models\EarningSplit::with(['order.orderItems.subJasa.jasa'])->first();
+
+    if (!$earning) {
+        return response()->json(['error' => 'No earning splits found']);
+    }
+
+    return response()->json([
+        'earning_id' => $earning->id,
+        'order_number' => $earning->order->order_number,
+        'order_items_count' => $earning->order->orderItems->count(),
+        'first_item' => $earning->order->orderItems->first() ? [
+            'id' => $earning->order->orderItems->first()->id,
+            'sub_jasa_id' => $earning->order->orderItems->first()->sub_jasa_id,
+            'sub_jasa_loaded' => $earning->order->orderItems->first()->subJasa ? true : false,
+            'sub_jasa_nama' => $earning->order->orderItems->first()->subJasa->nama ?? 'NULL',
+            'jasa_loaded' => $earning->order->orderItems->first()->subJasa->jasa ?? false,
+            'jasa_nama' => $earning->order->orderItems->first()->subJasa->jasa->nama ?? 'NULL'
+        ] : null
+    ]);
+})->name('test.earning.data'); // Test route for cart functionality
 Route::get('/test-cart', function () {
     return view('test-cart');
 })->name('test.cart');
