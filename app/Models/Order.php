@@ -99,6 +99,14 @@ class Order extends Model
         return $this->hasOne(Review::class);
     }
 
+    /**
+     * Get the earning split for this order
+     */
+    public function earningSplit()
+    {
+        return $this->hasOne(EarningSplit::class);
+    }
+
     // Variabel untuk status pembayaran
     const PAYMENT_STATUS_UNPAID = 'unpaid';
     const PAYMENT_STATUS_VERIFYING = 'verifying';

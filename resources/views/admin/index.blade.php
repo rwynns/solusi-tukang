@@ -73,9 +73,15 @@
                                 </svg>
                             </div>
                             <div class="ml-5">
-                                <h3 class="text-gray-500 text-sm">Pendapatan Bulan Ini</h3>
+                                <h3 class="text-gray-500 text-sm">Pendapatan Admin Bulan Ini</h3>
                                 <div class="mt-1 text-3xl font-semibold text-[#332E60]">
-                                    Rp{{ number_format(\App\Models\Order::whereMonth('created_at', date('m'))->whereYear('created_at', date('Y'))->where('payment_status', 'paid')->sum('total_amount') / 1000000, 1) }}jt
+                                    @php
+                                        $adminEarnings = \App\Models\EarningSplit::getTotalAdminEarnings('month');
+                                    @endphp
+                                    Rp{{ number_format($adminEarnings / 1000000, 1) }}jt
+                                </div>
+                                <div class="mt-1 text-xs text-gray-400">
+                                    (10% dari total pembayaran)
                                 </div>
                             </div>
                         </div>
@@ -185,6 +191,163 @@
                         <div class="mt-4">
                             <a href="{{ route('admin.orders.index') }}"
                                 class="text-sm font-medium text-[#F4C542] hover:text-[#e0b53d]">Lihat semua pesanan →</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Earning Splits Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                    <!-- Earning Statistics -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                            <h3 class="text-lg font-medium text-gray-700">Statistik Pendapatan</h3>
+                        </div>
+                        <div class="p-6">
+                            @php
+                                $totalAdminMonth = \App\Models\EarningSplit::getTotalAdminEarnings('month');
+                                $totalTukangMonth = \App\Models\EarningSplit::getTotalTukangEarnings(null, 'month');
+                                $totalEarningsMonth = $totalAdminMonth + $totalTukangMonth;
+
+                                $totalAdminAll = \App\Models\EarningSplit::getTotalAdminEarnings();
+                                $totalTukangAll = \App\Models\EarningSplit::getTotalTukangEarnings();
+                                $totalEarningsAll = $totalAdminAll + $totalTukangAll;
+                            @endphp
+
+                            <div class="space-y-4">
+                                <!-- Bulan Ini -->
+                                <div>
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-sm font-medium text-gray-600">Bulan Ini</span>
+                                        <span class="text-sm font-semibold text-[#332E60]">
+                                            Rp{{ number_format($totalEarningsMonth, 0, ',', '.') }}
+                                        </span>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between text-xs">
+                                            <span class="text-gray-500">Admin (10%)</span>
+                                            <span class="text-[#F4C542] font-medium">
+                                                Rp{{ number_format($totalAdminMonth, 0, ',', '.') }}
+                                            </span>
+                                        </div>
+                                        <div class="flex justify-between text-xs">
+                                            <span class="text-gray-500">Tukang (90%)</span>
+                                            <span class="text-green-600 font-medium">
+                                                Rp{{ number_format($totalTukangMonth, 0, ',', '.') }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 w-full bg-gray-200 rounded-full h-2">
+                                        @if ($totalEarningsMonth > 0)
+                                            <div class="h-2 rounded-full flex">
+                                                <div class="bg-[#F4C542] rounded-l-full"
+                                                    style="width: {{ ($totalAdminMonth / $totalEarningsMonth) * 100 }}%">
+                                                </div>
+                                                <div class="bg-green-500 rounded-r-full"
+                                                    style="width: {{ ($totalTukangMonth / $totalEarningsMonth) * 100 }}%">
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <!-- Total Keseluruhan -->
+                                <div class="pt-4 border-t border-gray-200">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-sm font-medium text-gray-600">Total Keseluruhan</span>
+                                        <span class="text-sm font-semibold text-[#332E60]">
+                                            Rp{{ number_format($totalEarningsAll, 0, ',', '.') }}
+                                        </span>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between text-xs">
+                                            <span class="text-gray-500">Admin (10%)</span>
+                                            <span class="text-[#F4C542] font-medium">
+                                                Rp{{ number_format($totalAdminAll, 0, ',', '.') }}
+                                            </span>
+                                        </div>
+                                        <div class="flex justify-between text-xs">
+                                            <span class="text-gray-500">Tukang (90%)</span>
+                                            <span class="text-green-600 font-medium">
+                                                Rp{{ number_format($totalTukangAll, 0, ',', '.') }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 w-full bg-gray-200 rounded-full h-2">
+                                        @if ($totalEarningsAll > 0)
+                                            <div class="h-2 rounded-full flex">
+                                                <div class="bg-[#F4C542] rounded-l-full"
+                                                    style="width: {{ ($totalAdminAll / $totalEarningsAll) * 100 }}%">
+                                                </div>
+                                                <div class="bg-green-500 rounded-r-full"
+                                                    style="width: {{ ($totalTukangAll / $totalEarningsAll) * 100 }}%">
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Earning Splits -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                            <h3 class="text-lg font-medium text-gray-700">Pembagian Pendapatan Terbaru</h3>
+                        </div>
+                        <div class="p-4">
+                            <div class="space-y-3">
+                                @php
+                                    $recentSplits = \App\Models\EarningSplit::with(['order', 'tukang'])
+                                        ->latest()
+                                        ->take(5)
+                                        ->get();
+                                @endphp
+
+                                @forelse($recentSplits as $split)
+                                    <div class="border border-gray-200 rounded-lg p-3">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <h4 class="text-sm font-medium text-[#332E60]">
+                                                    Order #{{ $split->order->order_number }}
+                                                </h4>
+                                                <p class="text-xs text-gray-500">
+                                                    {{ $split->tukang ? $split->tukang->name : 'Belum ditentukan' }}
+                                                </p>
+                                            </div>
+                                            <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                                                Dibagi Otomatis
+                                            </span>
+                                        </div>
+                                        <div class="mt-2 grid grid-cols-3 gap-2 text-xs">
+                                            <div class="text-center">
+                                                <div class="text-gray-500">Total</div>
+                                                <div class="font-medium text-[#332E60]">
+                                                    Rp{{ number_format($split->total_amount, 0, ',', '.') }}
+                                                </div>
+                                            </div>
+                                            <div class="text-center">
+                                                <div class="text-gray-500">Admin</div>
+                                                <div class="font-medium text-[#F4C542]">
+                                                    Rp{{ number_format($split->admin_amount, 0, ',', '.') }}
+                                                </div>
+                                            </div>
+                                            <div class="text-center">
+                                                <div class="text-gray-500">Tukang</div>
+                                                <div class="font-medium text-green-600">
+                                                    Rp{{ number_format($split->tukang_amount, 0, ',', '.') }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-2 text-xs text-gray-400">
+                                            {{ $split->created_at->format('d M Y H:i') }}
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="text-center text-gray-500 py-4">
+                                        Belum ada pembagian pendapatan
+                                    </div>
+                                @endforelse
+                            </div>
                         </div>
                     </div>
                 </div>

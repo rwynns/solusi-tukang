@@ -10,6 +10,8 @@ use App\Models\Location;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use App\Models\EarningSplit;
+use App\Models\WithdrawalRequest;
 
 class TukangDashboardController extends Controller
 {
@@ -48,13 +50,24 @@ class TukangDashboardController extends Controller
                 ->whereIn('id', $orderIds)
                 ->where('status', 'completed')
                 ->count(),
-            'total_earnings' => DB::table('order_items')
-                ->where('tukang_profile_id', $tukangProfileId)
-                ->sum('subtotal'),
-            'monthly_earnings' => DB::table('order_items')
-                ->where('tukang_profile_id', $tukangProfileId)
+            // Earning Statistics - merge here for template consistency
+            'total_earnings' => EarningSplit::where('tukang_id', $user->id)->sum('tukang_amount'),
+            'monthly_earnings' => EarningSplit::where('tukang_id', $user->id)
                 ->whereMonth('created_at', now()->month)
-                ->sum('subtotal'),
+                ->whereYear('created_at', now()->year)
+                ->sum('tukang_amount'),
+            'available_balance' => $user->available_balance ?? 0,
+            'pending_withdrawals' => $user->pending_withdrawals ?? 0,
+            'withdrawable_balance' => $user->withdrawable_balance ?? 0,
+        ];
+
+        // Earning Statistics (keep separate for backward compatibility)
+        $earningStats = [
+            'total_earnings' => $stats['total_earnings'],
+            'monthly_earnings' => $stats['monthly_earnings'],
+            'available_balance' => $stats['available_balance'],
+            'pending_withdrawals' => $stats['pending_withdrawals'],
+            'withdrawable_balance' => $stats['withdrawable_balance'],
         ];
 
         // Get recent orders
@@ -64,7 +77,27 @@ class TukangDashboardController extends Controller
             ->take(5)
             ->get();
 
-        return view('tukang.index', compact('user', 'stats', 'recent_orders'));
+        // Get earning splits for this tukang
+        $earning_splits = EarningSplit::where('tukang_id', $user->id)
+            ->with(['order'])
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get();
+
+        // Get recent withdrawals
+        $recent_withdrawals = WithdrawalRequest::where('tukang_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        return view('tukang.index', compact(
+            'user',
+            'stats',
+            'earningStats',
+            'recent_orders',
+            'earning_splits',
+            'recent_withdrawals'
+        ));
     }
 
     public function editProfile()

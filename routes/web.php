@@ -20,7 +20,9 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\PaymentOptionController;
+use App\Http\Controllers\Admin\EarningSplitController;
 use App\Http\Controllers\TukangDashboardController;
+use App\Http\Controllers\Tukang\EarningsController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 
@@ -145,6 +147,23 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/pesanan-saya/{order}/complete', [OrderController::class, 'tukangOrderComplete'])->name('tukang.pesanan.complete');
         Route::get('/orders', [OrderController::class, 'tukangOrderIndex'])->name('orders.index');
         Route::get('/orders/{order}', [OrderController::class, 'tukangOrderShow'])->name('orders.show');
+
+        // Penghasilan Tukang
+        Route::get('/penghasilan', [EarningsController::class, 'index'])->name('tukang.earnings.index');
+        Route::get('/penghasilan/{id}', [EarningsController::class, 'show'])->name('tukang.earnings.show');
+
+        // Bank Account Management - Simplified (1 account per tukang)
+        Route::get('/rekening', [\App\Http\Controllers\Tukang\BankAccountController::class, 'index'])->name('tukang.bank-accounts.index');
+        Route::get('/rekening/tambah', [\App\Http\Controllers\Tukang\BankAccountController::class, 'create'])->name('tukang.bank-accounts.create');
+        Route::post('/rekening', [\App\Http\Controllers\Tukang\BankAccountController::class, 'store'])->name('tukang.bank-accounts.store');
+        Route::delete('/rekening/{bankAccount}', [\App\Http\Controllers\Tukang\BankAccountController::class, 'destroy'])->name('tukang.bank-accounts.destroy');
+
+        // Withdrawal Management
+        Route::get('/withdrawal', [\App\Http\Controllers\Tukang\WithdrawalController::class, 'index'])->name('tukang.withdrawals.index');
+        Route::get('/withdrawal/create', [\App\Http\Controllers\Tukang\WithdrawalController::class, 'create'])->name('tukang.withdrawals.create');
+        Route::post('/withdrawal', [\App\Http\Controllers\Tukang\WithdrawalController::class, 'store'])->name('tukang.withdrawals.store');
+        Route::get('/withdrawal/{withdrawal}', [\App\Http\Controllers\Tukang\WithdrawalController::class, 'show'])->name('tukang.withdrawals.show');
+        Route::patch('/withdrawal/{withdrawal}/cancel', [\App\Http\Controllers\Tukang\WithdrawalController::class, 'cancel'])->name('tukang.withdrawals.cancel');
     });
 });
 
@@ -162,4 +181,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     // Ulasan management
     Route::get('/ulasan', [UlasanController::class, 'index'])->name('admin.ulasan.index');
     Route::delete('/ulasan/{review}', [UlasanController::class, 'destroy'])->name('admin.ulasan.destroy');
+
+    // Earning Splits management
+    Route::get('/earning-splits', [EarningSplitController::class, 'index'])->name('admin.earning-splits.index');
+
+    // Withdrawal management
+    Route::get('/withdrawals', [\App\Http\Controllers\Admin\WithdrawalController::class, 'index'])->name('admin.withdrawals.index');
+    Route::get('/withdrawals/{withdrawal}', [\App\Http\Controllers\Admin\WithdrawalController::class, 'show'])->name('admin.withdrawals.show');
+    Route::patch('/withdrawals/{withdrawal}/approve', [\App\Http\Controllers\Admin\WithdrawalController::class, 'approve'])->name('admin.withdrawals.approve');
+    Route::patch('/withdrawals/{withdrawal}/reject', [\App\Http\Controllers\Admin\WithdrawalController::class, 'reject'])->name('admin.withdrawals.reject');
+    Route::patch('/withdrawals/{withdrawal}/complete', [\App\Http\Controllers\Admin\WithdrawalController::class, 'markCompleted'])->name('admin.withdrawals.complete');
+    Route::post('/withdrawals/batch-process', [\App\Http\Controllers\Admin\WithdrawalController::class, 'batchProcess'])->name('admin.withdrawals.batch-process');
 });

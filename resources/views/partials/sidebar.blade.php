@@ -95,6 +95,26 @@
                             </svg>
                             Ulasan Pelanggan
                         </a>
+
+                        <a href="{{ route('admin.earning-splits.index') }}"
+                            class="{{ request()->routeIs('admin.earning-splits.*') ? 'bg-[#3e3777] text-white' : 'text-gray-300 hover:bg-[#3e3777] hover:text-white' }} group flex items-center px-4 py-3 text-sm font-medium rounded-md">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke-width="1.5" stroke="currentColor" class="mr-3 h-6 w-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                            </svg>
+                            Pembagian Pendapatan
+                        </a>
+
+                        <a href="{{ route('admin.withdrawals.index') }}"
+                            class="{{ request()->routeIs('admin.withdrawals.*') ? 'bg-[#3e3777] text-white' : 'text-gray-300 hover:bg-[#3e3777] hover:text-white' }} group flex items-center px-4 py-3 text-sm font-medium rounded-md">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke-width="1.5" stroke="currentColor" class="mr-3 h-6 w-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H4.5m2.25 0v3m0 0v.375c0 .621-.504 1.125-1.125 1.125H4.5m2.25 0H3.375c-.621 0-1.125.504-1.125 1.125v9.75c0 .621.504 1.125 1.125 1.125h1.125m9-9.75h6.375c.621 0 1.125.504 1.125 1.125v7.5c0 .621-.504 1.125-1.125 1.125h-9.75c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125H18a2.25 2.25 0 0 0 2.25-2.25M6 7.5h3v-1.5m-3 1.5c0 .621-.504 1.125-1.125 1.125v1.5h1.5m0 0v1.5h-1.5m1.5-1.5v6.75A2.25 2.25 0 0 0 9.75 18h6A2.25 2.25 0 0 0 18 15.75V10.5m0 0V9A2.25 2.25 0 0 0 15.75 6.75H14.25A2.25 2.25 0 0 0 12 9v1.5m0 0H9m3 0h3" />
+                            </svg>
+                            Kelola Withdrawal
+                        </a>
                     @elseif(Auth::user()->role_id == 2)
                         <!-- Menu Tukang -->
                         <a href="{{ route('tukang.pesanan.index') }}"
@@ -107,24 +127,34 @@
                             Pesanan Saya
                         </a>
 
-                        <a href="{{ route('tukang.profile') }}"
-                            class="{{ request()->routeIs('tukang.profile') ? 'bg-[#3e3777] text-white' : 'text-gray-300 hover:bg-[#3e3777] hover:text-white' }} group flex items-center px-4 py-3 text-sm font-medium rounded-md">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="mr-3 h-6 w-6" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <a href="{{ route('tukang.earnings.index') }}"
+                            class="{{ request()->routeIs('tukang.earnings.*') ? 'bg-[#3e3777] text-white' : 'text-gray-300 hover:bg-[#3e3777] hover:text-white' }} group flex items-center px-4 py-3 text-sm font-medium rounded-md">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke-width="1.5" stroke="currentColor" class="mr-3 h-6 w-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                             </svg>
-                            Profil Saya
+                            Penghasilan Saya
                         </a>
 
-                        <a href="{{ route('tukang.profile.edit') }}"
-                            class="{{ request()->routeIs('tukang.profile.edit') ? 'bg-[#3e3777] text-white' : 'text-gray-300 hover:bg-[#3e3777] hover:text-white' }} group flex items-center px-4 py-3 text-sm font-medium rounded-md">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="mr-3 h-6 w-6" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        <a href="{{ route('tukang.bank-accounts.index') }}"
+                            class="{{ request()->routeIs('tukang.bank-accounts.*') ? 'bg-[#3e3777] text-white' : 'text-gray-300 hover:bg-[#3e3777] hover:text-white' }} group flex items-center px-4 py-3 text-sm font-medium rounded-md">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke-width="1.5" stroke="currentColor" class="mr-3 h-6 w-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
                             </svg>
-                            Edit Profil
+                            Rekening Bank
+                        </a>
+
+                        <a href="{{ route('tukang.withdrawals.index') }}"
+                            class="{{ request()->routeIs('tukang.withdrawals.*') ? 'bg-[#3e3777] text-white' : 'text-gray-300 hover:bg-[#3e3777] hover:text-white' }} group flex items-center px-4 py-3 text-sm font-medium rounded-md">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke-width="1.5" stroke="currentColor" class="mr-3 h-6 w-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                            </svg>
+                            Withdrawal
                         </a>
                     @endif
                 </nav>

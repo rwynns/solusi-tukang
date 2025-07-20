@@ -107,14 +107,20 @@
                                         </svg>
                                     </div>
                                     <div class="ml-5">
-                                        <h3 class="text-gray-500 text-sm">Total Penghasilan</h3>
+                                        <h3 class="text-gray-500 text-sm">Pendapatan Saya (90%)</h3>
                                         <div class="mt-1 text-3xl font-semibold text-[#332E60]">Rp
                                             {{ number_format($stats['total_earnings'] ?? 0, 0, ',', '.') }}</div>
                                     </div>
                                 </div>
                                 <div class="mt-4 text-sm">
-                                    <span class="font-medium text-gray-500">Perbulan: Rp
+                                    <a href="{{ route('tukang.earnings.index') }}"
+                                        class="font-medium text-[#F4C542] hover:text-yellow-500">Lihat rincian
+                                        penghasilan</a>
+                                    <br>
+                                    <span class="font-medium text-gray-500">Bulan Ini: Rp
                                         {{ number_format($stats['monthly_earnings'] ?? 0, 0, ',', '.') }}</span>
+                                    <br>
+                                    <small class="text-gray-400">90% dari total pembayaran customer</small>
                                 </div>
                             </div>
                         </div>
@@ -262,6 +268,125 @@
                                     </a>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Riwayat Pendapatan -->
+                    <div class="mt-6 bg-white shadow overflow-hidden sm:rounded-lg">
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h2 class="text-lg leading-6 font-medium text-gray-900">Riwayat Pendapatan</h2>
+                            </div>
+
+                            @if (isset($earning_splits) && $earning_splits->count() > 0)
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th
+                                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Order
+                                                </th>
+                                                <th
+                                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Total Pembayaran
+                                                </th>
+                                                <th
+                                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Pendapatan Saya (90%)
+                                                </th>
+                                                <th
+                                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Status
+                                                </th>
+                                                <th
+                                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Tanggal
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            @foreach ($earning_splits as $split)
+                                                <tr>
+                                                    <td class="px-6 py-4 whitespace-nowrap">
+                                                        <div class="text-sm font-medium text-gray-900">
+                                                            #{{ $split->order->order_number }}
+                                                        </div>
+                                                        <div class="text-sm text-gray-500">
+                                                            {{ $split->order->customer_name }}
+                                                        </div>
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap">
+                                                        <div class="text-sm font-medium text-gray-900">
+                                                            Rp{{ number_format($split->total_amount, 0, ',', '.') }}
+                                                        </div>
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap">
+                                                        <div class="text-sm font-medium text-green-600">
+                                                            Rp{{ number_format($split->tukang_amount, 0, ',', '.') }}
+                                                        </div>
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap">
+                                                        <span
+                                                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                            {{ $split->status === 'distributed'
+                                                                ? 'bg-green-100 text-green-800'
+                                                                : ($split->status === 'pending'
+                                                                    ? 'bg-yellow-100 text-yellow-800'
+                                                                    : 'bg-red-100 text-red-800') }}">
+                                                            @if ($split->status === 'distributed')
+                                                                Sudah Dibayar
+                                                            @elseif($split->status === 'pending')
+                                                                Menunggu
+                                                            @else
+                                                                Ditahan
+                                                            @endif
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {{ $split->created_at->format('d M Y') }}
+                                                        @if ($split->distributed_at)
+                                                            <br><small class="text-green-600">
+                                                                Dibayar: {{ $split->distributed_at->format('d M Y') }}
+                                                            </small>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="mt-4 text-center">
+                                    <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
+                                        <div class="flex">
+                                            <div class="ml-3">
+                                                <h3 class="text-sm font-medium text-blue-800">
+                                                    Informasi Pembagian Pendapatan
+                                                </h3>
+                                                <div class="mt-2 text-sm text-blue-700">
+                                                    <p>• Anda mendapat <strong>90%</strong> dari total pembayaran customer
+                                                    </p>
+                                                    <p>• Admin mendapat <strong>10%</strong> sebagai biaya platform</p>
+                                                    <p>• Pembayaran akan diproses setelah pesanan selesai</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="text-center py-4">
+                                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <h3 class="mt-2 text-sm font-medium text-gray-900">Belum ada riwayat pendapatan</h3>
+                                    <p class="mt-1 text-sm text-gray-500">
+                                        Pendapatan akan muncul setelah Anda menyelesaikan pesanan.
+                                    </p>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>
