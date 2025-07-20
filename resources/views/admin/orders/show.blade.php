@@ -343,122 +343,142 @@
     </main>
 
     <!-- Status Update Modal -->
-    <div id="statusUpdateModal" class="fixed inset-0 z-50 flex items-center justify-center hidden"
-        aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="relative bg-white rounded-lg shadow-2xl max-w-lg w-full transform transition-all">
-            <form id="statusUpdateForm" method="POST">
-                @csrf
-                @method('PATCH')
-                <!-- Tombol X di pojok kanan atas -->
-                <button type="button" id="closeStatusModal"
-                    class="absolute top-3 right-3 text-gray-400 hover:text-gray-500">
-                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    <span class="sr-only">Close</span>
-                </button>
+    <div id="statusUpdateModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog"
+        aria-modal="true">
+        <!-- Modal backdrop -->
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
 
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div class="sm:flex sm:items-start">
-                        <div
-                            class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
-                            <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
+        <!-- Modal container -->
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div
+                    class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                    <form id="statusUpdateForm" method="POST">
+                        @csrf
+                        @method('PATCH')
+                        <!-- Tombol X di pojok kanan atas -->
+                        <button type="button" id="closeStatusModal"
+                            class="absolute top-3 right-3 text-gray-400 hover:text-gray-500">
+                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    d="M6 18L18 6M6 6l12 12" />
                             </svg>
-                        </div>
-                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                                Perbarui Status Pesanan
-                            </h3>
-                            <div class="mt-2">
-                                <p class="text-sm text-gray-500">
-                                    Pilih status baru untuk pesanan ini:
-                                </p>
-                                <select name="status" id="statusSelect"
-                                    class="mt-3 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#F4C542] focus:border-[#F4C542] sm:text-sm rounded-md">
-                                    <option value="pending">Pending</option>
-                                    <option value="processing">Processing</option>
-                                    <option value="completed">Completed</option>
-                                    <option value="cancelled">Cancelled</option>
-                                </select>
+                            <span class="sr-only">Close</span>
+                        </button>
+
+                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                            <div class="sm:flex sm:items-start">
+                                <div
+                                    class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                                    <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                </div>
+                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                        Perbarui Status Pesanan
+                                    </h3>
+                                    <div class="mt-2">
+                                        <p class="text-sm text-gray-500">
+                                            Pilih status baru untuk pesanan ini:
+                                        </p>
+                                        <select name="status" id="statusSelect"
+                                            class="mt-3 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#F4C542] focus:border-[#F4C542] sm:text-sm rounded-md">
+                                            <option value="pending">Pending</option>
+                                            <option value="processing">Processing</option>
+                                            <option value="completed">Completed</option>
+                                            <option value="cancelled">Cancelled</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">
+                            <button type="submit"
+                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#332E60] text-base font-medium text-white hover:bg-[#292650] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F4C542] sm:ml-3 sm:w-auto sm:text-sm">
+                                Update
+                            </button>
+                            <button type="button"
+                                class="close-modal mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F4C542] sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                                Batal
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">
-                    <button type="submit"
-                        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#332E60] text-base font-medium text-white hover:bg-[#292650] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F4C542] sm:ml-3 sm:w-auto sm:text-sm">
-                        Update
-                    </button>
-                    <button type="button"
-                        class="close-modal mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F4C542] sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                        Batal
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 
     <!-- Payment Status Update Modal -->
-    <div id="paymentUpdateModal" class="fixed inset-0 z-50 flex items-center justify-center hidden"
-        aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="relative bg-white rounded-lg shadow-2xl max-w-lg w-full transform transition-all">
-            <form id="paymentUpdateForm" method="POST">
-                @csrf
-                @method('PATCH')
-                <!-- Tombol X di pojok kanan atas -->
-                <button type="button" id="closePaymentModal"
-                    class="absolute top-3 right-3 text-gray-400 hover:text-gray-500">
-                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    <span class="sr-only">Close</span>
-                </button>
+    <div id="paymentUpdateModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog"
+        aria-modal="true">
+        <!-- Modal backdrop -->
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
 
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div class="sm:flex sm:items-start">
-                        <div
-                            class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
-                            <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
+        <!-- Modal container -->
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div
+                    class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                    <form id="paymentUpdateForm" method="POST">
+                        @csrf
+                        @method('PATCH')
+                        <!-- Tombol X di pojok kanan atas -->
+                        <button type="button" id="closePaymentModal"
+                            class="absolute top-3 right-3 text-gray-400 hover:text-gray-500">
+                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    d="M6 18L18 6M6 6l12 12" />
                             </svg>
-                        </div>
-                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                                Perbarui Status Pembayaran
-                            </h3>
-                            <div class="mt-2">
-                                <p class="text-sm text-gray-500">
-                                    Pilih status pembayaran baru untuk pesanan ini:
-                                </p>
-                                <select name="payment_status" id="paymentStatusSelect"
-                                    class="mt-3 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#F4C542] focus:border-[#F4C542] sm:text-sm rounded-md">
-                                    <option value="pending">Pending</option>
-                                    <option value="verifying">Menunggu Verifikasi</option>
-                                    <option value="paid">Paid</option>
-                                    <option value="cancelled">Cancelled</option>
-                                </select>
+                            <span class="sr-only">Close</span>
+                        </button>
+
+                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                            <div class="sm:flex sm:items-start">
+                                <div
+                                    class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+                                    <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                        Perbarui Status Pembayaran
+                                    </h3>
+                                    <div class="mt-2">
+                                        <p class="text-sm text-gray-500">
+                                            Pilih status pembayaran baru untuk pesanan ini:
+                                        </p>
+                                        <select name="payment_status" id="paymentStatusSelect"
+                                            class="mt-3 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#F4C542] focus:border-[#F4C542] sm:text-sm rounded-md">
+                                            <option value="pending">Pending</option>
+                                            <option value="verifying">Menunggu Verifikasi</option>
+                                            <option value="paid">Paid</option>
+                                            <option value="cancelled">Cancelled</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                            <button type="submit"
+                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm">
+                                Update
+                            </button>
+                            <button type="button"
+                                class="close-payment-modal mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F4C542] sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                                Batal
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button type="submit"
-                        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm">
-                        Update
-                    </button>
-                    <button type="button"
-                        class="close-payment-modal mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F4C542] sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                        Batal
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 @endsection
@@ -485,7 +505,7 @@
                         statusSelect.value = currentStatus;
 
                         // Set form action
-                        statusUpdateForm.action = `/admin/orders/${orderId}/update-status`;
+                        statusUpdateForm.action = `/admin/orders/${orderId}/status`;
 
                         // Show modal
                         statusUpdateModal.classList.remove('hidden');
@@ -550,10 +570,23 @@
                 });
             });
 
-            // Close dengan ESC key
+            // Close dengan ESC key dan backdrop click
             document.addEventListener('keydown', function(event) {
                 if (event.key === 'Escape') {
                     statusUpdateModal.classList.add('hidden');
+                    paymentUpdateModal.classList.add('hidden');
+                }
+            });
+
+            // Close modal when clicking on backdrop
+            statusUpdateModal.addEventListener('click', function(event) {
+                if (event.target === statusUpdateModal) {
+                    statusUpdateModal.classList.add('hidden');
+                }
+            });
+
+            paymentUpdateModal.addEventListener('click', function(event) {
+                if (event.target === paymentUpdateModal) {
                     paymentUpdateModal.classList.add('hidden');
                 }
             });
