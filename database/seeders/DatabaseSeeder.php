@@ -42,6 +42,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             JasaSeeder::class,
             SubJasaSeeder::class,
+            TukangSeeder::class,
             LocationSeeder::class
         ]);
     }
